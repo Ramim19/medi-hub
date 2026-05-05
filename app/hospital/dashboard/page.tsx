@@ -3,7 +3,6 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -44,7 +43,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { Badge } from "@/components/ui/badge"
 import {
   LayoutDashboard,
   TestTube,
@@ -60,6 +60,7 @@ import {
   Upload,
   CheckCircle,
   FileText,
+  UserPlus,
 } from "lucide-react"
 
 // Types
@@ -94,6 +95,22 @@ interface CompletedPatient {
   reportFiles: ReportFile[]
 }
 
+interface EmergencyPatient {
+  id: string
+  patientName: string
+  ticketNumber: string
+  status: "in progress" | "completed"
+  createdAt: string
+}
+
+interface HospitalBed {
+  id: string
+  bedNumber: string
+  bedType: "Ward" | "Cabin" | "ICU"
+  status: "Available" | "Occupied"
+  assignedPatient: string | null
+}
+
 const testTypes = [
   "Blood Tests",
   "Imaging & Scans",
@@ -102,6 +119,8 @@ const testTypes = [
   "Hormone Tests",
   "Allergy Tests",
 ]
+
+const bedTypes = ["Ward", "Cabin", "ICU"] as const
 
 const initialTests: MedicalTest[] = [
   {
@@ -176,6 +195,32 @@ const initialCompletedPatients: CompletedPatient[] = [
   },
 ]
 
+const initialEmergencyPatients: EmergencyPatient[] = [
+  {
+    id: "e1",
+    patientName: "Abdul Rahman",
+    ticketNumber: "EM-001",
+    status: "in progress",
+    createdAt: "2024-01-15",
+  },
+  {
+    id: "e2",
+    patientName: "Salma Akter",
+    ticketNumber: "EM-002",
+    status: "in progress",
+    createdAt: "2024-01-15",
+  },
+]
+
+const initialBeds: HospitalBed[] = [
+  { id: "b1", bedNumber: "W-101", bedType: "Ward", status: "Available", assignedPatient: null },
+  { id: "b2", bedNumber: "W-102", bedType: "Ward", status: "Occupied", assignedPatient: "Mohammad Ali" },
+  { id: "b3", bedNumber: "C-201", bedType: "Cabin", status: "Available", assignedPatient: null },
+  { id: "b4", bedNumber: "C-202", bedType: "Cabin", status: "Occupied", assignedPatient: "Rahima Begum" },
+  { id: "b5", bedNumber: "ICU-01", bedType: "ICU", status: "Available", assignedPatient: null },
+  { id: "b6", bedNumber: "ICU-02", bedType: "ICU", status: "Occupied", assignedPatient: "Jamal Uddin" },
+]
+
 const sidebarLinks = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "tests", label: "Medical Tests", icon: TestTube },
@@ -237,14 +282,27 @@ function SidebarContent({
 }
 
 export default function HospitalDashboardPage() {
-  const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [activeTab, setActiveTab] = useState("dashboard")
 
-  // Dashboard mock data
-  const emergencyQueueCount = 12
-  const availableBeds = 45
-  const totalBeds = 120
+  // Emergency Queue state
+  const [emergencyPatients, setEmergencyPatients] = useState<EmergencyPatient[]>(initialEmergencyPatients)
+  const [emergencyDialogOpen, setEmergencyDialogOpen] = useState(false)
+  const [emergencyPatientName, setEmergencyPatientName] = useState("")
+  const [ticketCounter, setTicketCounter] = useState(3)
+
+  // Bed Management state
+  const [beds, setBeds] = useState<HospitalBed[]>(initialBeds)
+  const [bedDialogOpen, setBedDialogOpen] = useState(false)
+  const [bedForm, setBedForm] = useState({ bedNumber: "", bedType: "Ward" as "Ward" | "Cabin" | "ICU" })
+  const [assignPatientDialogOpen, setAssignPatientDialogOpen] = useState(false)
+  const [assigningBedId, setAssigningBedId] = useState<string | null>(null)
+  const [assignPatientName, setAssignPatientName] = useState("")
+
+  // Computed dashboard stats (auto-updating)
+  const emergencyQueueCount = emergencyPatients.filter(p => p.status === "in progress").length
+  const availableBeds = beds.filter(b => b.status === "Available").length
+  const totalBeds = beds.length
 
   // Medical Tests state
   const [tests, setTests] = useState<MedicalTest[]>(initialTests)
@@ -268,6 +326,78 @@ export default function HospitalDashboardPage() {
   const [completedPatients, setCompletedPatients] = useState<CompletedPatient[]>(initialCompletedPatients)
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [uploadingPatientId, setUploadingPatientId] = useState<string | null>(null)
+
+  // Emergency Queue handlers
+  const handleAddEmergencyPatient = () => {
+    if (!emergencyPatientName.trim()) return
+
+    const newPatient: EmergencyPatient = {
+      id: Date.now().toString(),
+      patientName: emergencyPatientName.trim(),
+      ticketNumber: `EM-${String(ticketCounter).padStart(3, "0")}`,
+      status: "in progress",
+      createdAt: new Date().toISOString().split("T")[0],
+    }
+
+    setEmergencyPatients([...emergencyPatients, newPatient])
+    setTicketCounter(ticketCounter + 1)
+    setEmergencyPatientName("")
+    setEmergencyDialogOpen(false)
+  }
+
+  const handleMarkEmergencyCompleted = (patientId: string) => {
+    setEmergencyPatients(
+      emergencyPatients.filter(p => p.id !== patientId)
+    )
+  }
+
+  // Bed Management handlers
+  const handleAddBed = () => {
+    if (!bedForm.bedNumber.trim()) return
+
+    const newBed: HospitalBed = {
+      id: Date.now().toString(),
+      bedNumber: bedForm.bedNumber.trim(),
+      bedType: bedForm.bedType,
+      status: "Available",
+      assignedPatient: null,
+    }
+
+    setBeds([...beds, newBed])
+    setBedForm({ bedNumber: "", bedType: "Ward" })
+    setBedDialogOpen(false)
+  }
+
+  const openAssignPatientDialog = (bedId: string) => {
+    setAssigningBedId(bedId)
+    setAssignPatientName("")
+    setAssignPatientDialogOpen(true)
+  }
+
+  const handleAssignPatient = () => {
+    if (!assigningBedId || !assignPatientName.trim()) return
+
+    setBeds(
+      beds.map(b =>
+        b.id === assigningBedId
+          ? { ...b, status: "Occupied" as const, assignedPatient: assignPatientName.trim() }
+          : b
+      )
+    )
+    setAssignPatientName("")
+    setAssigningBedId(null)
+    setAssignPatientDialogOpen(false)
+  }
+
+  const handleMarkBedAvailable = (bedId: string) => {
+    setBeds(
+      beds.map(b =>
+        b.id === bedId
+          ? { ...b, status: "Available" as const, assignedPatient: null }
+          : b
+      )
+    )
+  }
 
   // Test CRUD handlers
   const openAddTestDialog = () => {
@@ -409,6 +539,7 @@ export default function HospitalDashboardPage() {
           {activeTab === "dashboard" && (
             <div className="space-y-6">
               <h1 className="text-2xl font-bold">Dashboard Overview</h1>
+              
               {/* Stats Cards */}
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <Card>
@@ -421,7 +552,7 @@ export default function HospitalDashboardPage() {
                   <CardContent>
                     <div className="text-3xl font-bold">{emergencyQueueCount}</div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Patients waiting
+                      Patients in progress
                     </p>
                   </CardContent>
                 </Card>
@@ -461,6 +592,134 @@ export default function HospitalDashboardPage() {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Emergency Queue Management */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Emergency Queue</CardTitle>
+                    <CardDescription>Manage emergency patients currently in progress</CardDescription>
+                  </div>
+                  <Button onClick={() => setEmergencyDialogOpen(true)}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Add Emergency Patient
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {emergencyPatients.filter(p => p.status === "in progress").length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8">
+                      No emergency patients in queue
+                    </p>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Patient Name</TableHead>
+                          <TableHead>Ticket No.</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead className="text-right">Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {emergencyPatients
+                          .filter(p => p.status === "in progress")
+                          .map((patient) => (
+                            <TableRow key={patient.id}>
+                              <TableCell className="font-medium">{patient.patientName}</TableCell>
+                              <TableCell>
+                                <Badge variant="secondary">{patient.ticketNumber}</Badge>
+                              </TableCell>
+                              <TableCell>{patient.createdAt}</TableCell>
+                              <TableCell className="text-right">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleMarkEmergencyCompleted(patient.id)}
+                                >
+                                  <CheckCircle className="mr-2 h-4 w-4" />
+                                  Mark Completed
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Bed Management */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Bed Management</CardTitle>
+                    <CardDescription>Manage hospital beds and patient assignments</CardDescription>
+                  </div>
+                  <Button onClick={() => setBedDialogOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Bed
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {beds.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8">
+                      No beds added yet
+                    </p>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Bed No.</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Assigned Patient</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {beds.map((bed) => (
+                          <TableRow key={bed.id}>
+                            <TableCell className="font-medium">{bed.bedNumber}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{bed.bedType}</Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={bed.status === "Available" ? "default" : "secondary"}
+                                className={bed.status === "Available" ? "bg-green-600 hover:bg-green-700" : ""}
+                              >
+                                {bed.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {bed.assignedPatient || <span className="text-muted-foreground">—</span>}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {bed.status === "Available" ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openAssignPatientDialog(bed.id)}
+                                >
+                                  Assign Patient
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleMarkBedAvailable(bed.id)}
+                                >
+                                  Mark as Available
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           )}
 
@@ -602,9 +861,7 @@ export default function HospitalDashboardPage() {
                                     {patient.uploadedFiles.length > 0 && (
                                       <Button
                                         size="sm"
-                                        onClick={() =>
-                                          handleMarkAsCompleted(patient.id)
-                                        }
+                                        onClick={() => handleMarkAsCompleted(patient.id)}
                                       >
                                         <CheckCircle className="mr-2 h-4 w-4" />
                                         Mark as Completed
@@ -626,7 +883,7 @@ export default function HospitalDashboardPage() {
                     <CardHeader>
                       <CardTitle>Completed Patients</CardTitle>
                       <CardDescription>
-                        Patients who already have their results
+                        Patients who already have their test results
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -689,7 +946,7 @@ export default function HospitalDashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    Settings page content will be added here.
+                    Settings panel coming soon.
                   </p>
                 </CardContent>
               </Card>
@@ -698,33 +955,72 @@ export default function HospitalDashboardPage() {
         </main>
       </div>
 
-      {/* Add/Edit Test Dialog */}
-      <Dialog open={testDialogOpen} onOpenChange={setTestDialogOpen}>
-        <DialogContent className="max-w-lg">
+      {/* Add Emergency Patient Dialog */}
+      <Dialog open={emergencyDialogOpen} onOpenChange={setEmergencyDialogOpen}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {editingTest ? "Edit Medical Test" : "Add New Medical Test"}
-            </DialogTitle>
+            <DialogTitle>Add Emergency Patient</DialogTitle>
             <DialogDescription>
-              {editingTest
-                ? "Update the test details below."
-                : "Fill in the details for the new test."}
+              Issue a ticket for a new emergency patient
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="testType">Test Type</Label>
+              <Label htmlFor="emergencyPatientName">Patient Name</Label>
+              <Input
+                id="emergencyPatientName"
+                placeholder="Enter patient name"
+                value={emergencyPatientName}
+                onChange={(e) => setEmergencyPatientName(e.target.value)}
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Ticket will be assigned: <Badge variant="secondary">EM-{String(ticketCounter).padStart(3, "0")}</Badge>
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEmergencyDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddEmergencyPatient}>
+              Add Patient
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Bed Dialog */}
+      <Dialog open={bedDialogOpen} onOpenChange={setBedDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Bed</DialogTitle>
+            <DialogDescription>
+              Add a new bed to the hospital
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="bedNumber">Bed Number</Label>
+              <Input
+                id="bedNumber"
+                placeholder="e.g., W-101"
+                value={bedForm.bedNumber}
+                onChange={(e) => setBedForm({ ...bedForm, bedNumber: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bedType">Bed Type</Label>
               <Select
-                value={testForm.testType}
-                onValueChange={(value) =>
-                  setTestForm({ ...testForm, testType: value })
+                value={bedForm.bedType}
+                onValueChange={(value: "Ward" | "Cabin" | "ICU") =>
+                  setBedForm({ ...bedForm, bedType: value })
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select test type" />
+                  <SelectValue placeholder="Select bed type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {testTypes.map((type) => (
+                  {bedTypes.map((type) => (
                     <SelectItem key={type} value={type}>
                       {type}
                     </SelectItem>
@@ -732,50 +1028,130 @@ export default function HospitalDashboardPage() {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBedDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddBed}>
+              Add Bed
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Patient Dialog */}
+      <Dialog open={assignPatientDialogOpen} onOpenChange={setAssignPatientDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Patient to Bed</DialogTitle>
+            <DialogDescription>
+              Enter the patient name to assign to this bed
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="testName">Test Name</Label>
+              <Label htmlFor="assignPatientName">Patient Name</Label>
               <Input
-                id="testName"
-                value={testForm.testName}
-                onChange={(e) =>
-                  setTestForm({ ...testForm, testName: e.target.value })
-                }
-                placeholder="Enter test name"
+                id="assignPatientName"
+                placeholder="Enter patient name"
+                value={assignPatientName}
+                onChange={(e) => setAssignPatientName(e.target.value)}
               />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignPatientDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAssignPatient}>
+              Assign Patient
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Test Create/Edit Dialog */}
+      <Dialog open={testDialogOpen} onOpenChange={setTestDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingTest ? "Edit Medical Test" : "Add New Medical Test"}
+            </DialogTitle>
+            <DialogDescription>
+              {editingTest
+                ? "Update the details of this medical test"
+                : "Fill in the details for the new medical test"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="testType">Test Type</Label>
+                <Select
+                  value={testForm.testType}
+                  onValueChange={(value) =>
+                    setTestForm({ ...testForm, testType: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select test type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {testTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="testName">Test Name</Label>
+                <Input
+                  id="testName"
+                  placeholder="e.g., Complete Blood Count"
+                  value={testForm.testName}
+                  onChange={(e) =>
+                    setTestForm({ ...testForm, testName: e.target.value })
+                  }
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
+                placeholder="Describe what this test measures..."
                 value={testForm.description}
                 onChange={(e) =>
                   setTestForm({ ...testForm, description: e.target.value })
                 }
-                placeholder="Enter test description"
-                rows={3}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="timeAvailable">Time Available</Label>
-              <Input
-                id="timeAvailable"
-                value={testForm.timeAvailable}
-                onChange={(e) =>
-                  setTestForm({ ...testForm, timeAvailable: e.target.value })
-                }
-                placeholder="e.g. Sunday to Thursday 10AM–2PM"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cost">Cost (BDT)</Label>
-              <Input
-                id="cost"
-                value={testForm.cost}
-                onChange={(e) =>
-                  setTestForm({ ...testForm, cost: e.target.value })
-                }
-                placeholder="Enter cost"
-              />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="timeAvailable">Time Available</Label>
+                <Input
+                  id="timeAvailable"
+                  placeholder="e.g., Sunday to Thursday 10AM–2PM"
+                  value={testForm.timeAvailable}
+                  onChange={(e) =>
+                    setTestForm({ ...testForm, timeAvailable: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cost">Cost (BDT)</Label>
+                <Input
+                  id="cost"
+                  placeholder="e.g., 500"
+                  value={testForm.cost}
+                  onChange={(e) =>
+                    setTestForm({ ...testForm, cost: e.target.value })
+                  }
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="preparationInstructions">
@@ -783,6 +1159,7 @@ export default function HospitalDashboardPage() {
               </Label>
               <Textarea
                 id="preparationInstructions"
+                placeholder="Any special instructions for patients..."
                 value={testForm.preparationInstructions}
                 onChange={(e) =>
                   setTestForm({
@@ -790,8 +1167,6 @@ export default function HospitalDashboardPage() {
                     preparationInstructions: e.target.value,
                   })
                 }
-                placeholder="Enter preparation instructions"
-                rows={3}
               />
             </div>
           </div>
@@ -806,7 +1181,7 @@ export default function HospitalDashboardPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Test Confirmation */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -818,7 +1193,10 @@ export default function HospitalDashboardPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteTest}>
+            <AlertDialogAction
+              onClick={handleDeleteTest}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -831,24 +1209,19 @@ export default function HospitalDashboardPage() {
           <DialogHeader>
             <DialogTitle>Upload Report</DialogTitle>
             <DialogDescription>
-              Upload one or more report files for this patient.
+              Upload one or more report files for this patient
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Label htmlFor="reportFiles">Select Files</Label>
             <Input
-              id="reportFiles"
               type="file"
               multiple
-              className="mt-2"
               onChange={handleFileUpload}
+              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
             />
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setUploadDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>
               Cancel
             </Button>
           </DialogFooter>
