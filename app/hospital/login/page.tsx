@@ -8,6 +8,21 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Building2 } from "lucide-react"
+
+// Demo hospitals list
+const demoHospitals = [
+  { id: "hospital-1", name: "Dhaka Medical College Hospital" },
+  { id: "hospital-2", name: "Square Hospital" },
+  { id: "hospital-3", name: "United Hospital" },
+]
 
 export default function HospitalLoginPage() {
   const router = useRouter()
@@ -15,6 +30,7 @@ export default function HospitalLoginPage() {
     email: "",
     password: "",
   })
+  const [selectedHospital, setSelectedHospital] = useState("hospital-1")
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -23,15 +39,15 @@ export default function HospitalLoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    router.push("/hospital/dashboard")
+    router.push(`/hospital/dashboard/${selectedHospital}`)
   }
 
-  const handleDemoLogin = () => {
+  const handleDemoLogin = (hospitalId: string) => {
     setFormData({
       email: "hospital@example.com",
       password: "123456",
     })
-    router.push("/hospital/dashboard")
+    router.push(`/hospital/dashboard/${hospitalId}`)
   }
 
   return (
@@ -56,6 +72,22 @@ export default function HospitalLoginPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="hospital">Select Hospital</Label>
+                <Select value={selectedHospital} onValueChange={setSelectedHospital}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a hospital" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {demoHospitals.map((hospital) => (
+                      <SelectItem key={hospital.id} value={hospital.id}>
+                        {hospital.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -101,11 +133,11 @@ export default function HospitalLoginPage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Demo Login</CardTitle>
             <CardDescription>
-              Use demo credentials to explore the dashboard
+              Quick access to demo hospital dashboards
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="text-sm space-y-1">
+            <div className="text-sm space-y-1 mb-4">
               <p>
                 <span className="text-muted-foreground">Email:</span>{" "}
                 <code className="bg-muted px-1.5 py-0.5 rounded text-foreground">hospital@example.com</code>
@@ -115,14 +147,20 @@ export default function HospitalLoginPage() {
                 <code className="bg-muted px-1.5 py-0.5 rounded text-foreground">123456</code>
               </p>
             </div>
-            <Button
-              type="button"
-              variant="secondary"
-              className="w-full"
-              onClick={handleDemoLogin}
-            >
-              Login with Demo Account
-            </Button>
+            <div className="space-y-2">
+              {demoHospitals.map((hospital) => (
+                <Button
+                  key={hospital.id}
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => handleDemoLogin(hospital.id)}
+                >
+                  <Building2 className="mr-2 h-4 w-4" />
+                  {hospital.name}
+                </Button>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
