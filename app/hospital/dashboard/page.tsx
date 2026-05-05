@@ -61,6 +61,7 @@ import {
   CheckCircle,
   FileText,
   UserPlus,
+  ChevronDown,
 } from "lucide-react"
 
 // Types
@@ -111,6 +112,23 @@ interface HospitalBed {
   assignedPatient: string | null
 }
 
+interface HospitalProfile {
+  name: string
+  address: string
+  licenseNumber: string
+}
+
+interface HospitalData {
+  id: string
+  profile: HospitalProfile
+  emergencyPatients: EmergencyPatient[]
+  beds: HospitalBed[]
+  tests: MedicalTest[]
+  pendingPatients: PendingPatient[]
+  completedPatients: CompletedPatient[]
+  ticketCounter: number
+}
+
 const testTypes = [
   "Blood Tests",
   "Imaging & Scans",
@@ -122,103 +140,212 @@ const testTypes = [
 
 const bedTypes = ["Ward", "Cabin", "ICU"] as const
 
-const initialTests: MedicalTest[] = [
+// Initial mock data for multiple hospitals
+const initialHospitalsData: HospitalData[] = [
   {
-    id: "1",
-    testType: "Blood Tests",
-    testName: "Complete Blood Count (CBC)",
-    description: "Measures different components of blood including red cells, white cells, and platelets.",
-    timeAvailable: "Sunday to Thursday 8AM–4PM",
-    cost: "500",
-    preparationInstructions: "Fasting for 8-12 hours recommended.",
+    id: "hospital-1",
+    profile: {
+      name: "Dhaka Medical College Hospital",
+      address: "Secretariat Road, Dhaka 1000",
+      licenseNumber: "DMCH-2024-001",
+    },
+    emergencyPatients: [
+      {
+        id: "e1",
+        patientName: "Abdul Rahman",
+        ticketNumber: "EM-001",
+        status: "in progress",
+        createdAt: "2024-01-15",
+      },
+      {
+        id: "e2",
+        patientName: "Salma Akter",
+        ticketNumber: "EM-002",
+        status: "in progress",
+        createdAt: "2024-01-15",
+      },
+    ],
+    beds: [
+      { id: "b1", bedNumber: "W-101", bedType: "Ward", status: "Available", assignedPatient: null },
+      { id: "b2", bedNumber: "W-102", bedType: "Ward", status: "Occupied", assignedPatient: "Mohammad Ali" },
+      { id: "b3", bedNumber: "C-201", bedType: "Cabin", status: "Available", assignedPatient: null },
+      { id: "b4", bedNumber: "C-202", bedType: "Cabin", status: "Occupied", assignedPatient: "Rahima Begum" },
+      { id: "b5", bedNumber: "ICU-01", bedType: "ICU", status: "Available", assignedPatient: null },
+      { id: "b6", bedNumber: "ICU-02", bedType: "ICU", status: "Occupied", assignedPatient: "Jamal Uddin" },
+    ],
+    tests: [
+      {
+        id: "1",
+        testType: "Blood Tests",
+        testName: "Complete Blood Count (CBC)",
+        description: "Measures different components of blood including red cells, white cells, and platelets.",
+        timeAvailable: "Sunday to Thursday 8AM–4PM",
+        cost: "500",
+        preparationInstructions: "Fasting for 8-12 hours recommended.",
+      },
+      {
+        id: "2",
+        testType: "Imaging & Scans",
+        testName: "Chest X-Ray",
+        description: "Imaging test to examine the lungs, heart, and chest wall.",
+        timeAvailable: "Saturday to Thursday 9AM–5PM",
+        cost: "600",
+        preparationInstructions: "Remove jewelry and metal objects. Wear loose clothing.",
+      },
+      {
+        id: "3",
+        testType: "Cardiac Tests",
+        testName: "ECG (Electrocardiogram)",
+        description: "Records the electrical activity of the heart.",
+        timeAvailable: "Sunday to Thursday 10AM–2PM",
+        cost: "400",
+        preparationInstructions: "No special preparation required.",
+      },
+    ],
+    pendingPatients: [
+      {
+        id: "p1",
+        patientName: "Rahim Ahmed",
+        testName: "Complete Blood Count (CBC)",
+        dateBooked: "2024-01-15",
+        uploadedFiles: [],
+      },
+      {
+        id: "p2",
+        patientName: "Fatima Khan",
+        testName: "ECG (Electrocardiogram)",
+        dateBooked: "2024-01-14",
+        uploadedFiles: [],
+      },
+    ],
+    completedPatients: [
+      {
+        id: "c1",
+        patientName: "Nasreen Begum",
+        testName: "Chest X-Ray",
+        dateCompleted: "2024-01-12",
+        reportFiles: [{ name: "XRay_Report.pdf", uploadedAt: "2024-01-12" }],
+      },
+    ],
+    ticketCounter: 3,
   },
   {
-    id: "2",
-    testType: "Imaging & Scans",
-    testName: "Chest X-Ray",
-    description: "Imaging test to examine the lungs, heart, and chest wall.",
-    timeAvailable: "Saturday to Thursday 9AM–5PM",
-    cost: "600",
-    preparationInstructions: "Remove jewelry and metal objects. Wear loose clothing.",
+    id: "hospital-2",
+    profile: {
+      name: "Square Hospital",
+      address: "18/F Bir Uttam Qazi Nuruzzaman Sarak, Dhaka 1205",
+      licenseNumber: "SQH-2024-002",
+    },
+    emergencyPatients: [
+      {
+        id: "e3",
+        patientName: "Karim Hossain",
+        ticketNumber: "EM-001",
+        status: "in progress",
+        createdAt: "2024-01-15",
+      },
+    ],
+    beds: [
+      { id: "b7", bedNumber: "SQ-W-101", bedType: "Ward", status: "Available", assignedPatient: null },
+      { id: "b8", bedNumber: "SQ-W-102", bedType: "Ward", status: "Available", assignedPatient: null },
+      { id: "b9", bedNumber: "SQ-C-201", bedType: "Cabin", status: "Occupied", assignedPatient: "Tahmina Sultana" },
+      { id: "b10", bedNumber: "SQ-ICU-01", bedType: "ICU", status: "Available", assignedPatient: null },
+    ],
+    tests: [
+      {
+        id: "4",
+        testType: "Hormone Tests",
+        testName: "Thyroid Profile (T3, T4, TSH)",
+        description: "Measures thyroid hormone levels to assess thyroid function.",
+        timeAvailable: "Sunday to Wednesday 8AM–12PM",
+        cost: "1500",
+        preparationInstructions: "Morning sample preferred. Inform about any thyroid medications.",
+      },
+      {
+        id: "5",
+        testType: "Blood Tests",
+        testName: "Lipid Profile",
+        description: "Measures cholesterol levels including HDL, LDL, and triglycerides.",
+        timeAvailable: "Sunday to Thursday 8AM–2PM",
+        cost: "800",
+        preparationInstructions: "Fasting for 10-12 hours required.",
+      },
+    ],
+    pendingPatients: [
+      {
+        id: "p4",
+        patientName: "Shafiq Islam",
+        testName: "Thyroid Profile (T3, T4, TSH)",
+        dateBooked: "2024-01-16",
+        uploadedFiles: [],
+      },
+    ],
+    completedPatients: [],
+    ticketCounter: 2,
   },
   {
-    id: "3",
-    testType: "Cardiac Tests",
-    testName: "ECG (Electrocardiogram)",
-    description: "Records the electrical activity of the heart.",
-    timeAvailable: "Sunday to Thursday 10AM–2PM",
-    cost: "400",
-    preparationInstructions: "No special preparation required.",
+    id: "hospital-3",
+    profile: {
+      name: "United Hospital",
+      address: "Plot 15, Road 71, Gulshan, Dhaka 1212",
+      licenseNumber: "UHL-2024-003",
+    },
+    emergencyPatients: [],
+    beds: [
+      { id: "b11", bedNumber: "UH-W-101", bedType: "Ward", status: "Available", assignedPatient: null },
+      { id: "b12", bedNumber: "UH-C-101", bedType: "Cabin", status: "Available", assignedPatient: null },
+      { id: "b13", bedNumber: "UH-ICU-01", bedType: "ICU", status: "Occupied", assignedPatient: "Rafiq Ahmed" },
+    ],
+    tests: [
+      {
+        id: "6",
+        testType: "Imaging & Scans",
+        testName: "MRI Brain",
+        description: "Detailed imaging of brain structures using magnetic resonance.",
+        timeAvailable: "Saturday to Thursday 10AM–6PM",
+        cost: "8000",
+        preparationInstructions: "Remove all metal objects. Inform if you have any implants.",
+      },
+      {
+        id: "7",
+        testType: "Allergy Tests",
+        testName: "Skin Prick Test",
+        description: "Tests for allergic reactions to common allergens.",
+        timeAvailable: "Sunday to Wednesday 9AM–1PM",
+        cost: "2500",
+        preparationInstructions: "Stop antihistamines 5 days before test.",
+      },
+    ],
+    pendingPatients: [
+      {
+        id: "p5",
+        patientName: "Nusrat Jahan",
+        testName: "MRI Brain",
+        dateBooked: "2024-01-17",
+        uploadedFiles: [],
+      },
+      {
+        id: "p6",
+        patientName: "Habib Rahman",
+        testName: "Skin Prick Test",
+        dateBooked: "2024-01-17",
+        uploadedFiles: [],
+      },
+    ],
+    completedPatients: [
+      {
+        id: "c2",
+        patientName: "Sultana Begum",
+        testName: "MRI Brain",
+        dateCompleted: "2024-01-10",
+        reportFiles: [
+          { name: "MRI_Report.pdf", uploadedAt: "2024-01-10" },
+          { name: "MRI_Images.zip", uploadedAt: "2024-01-10" },
+        ],
+      },
+    ],
+    ticketCounter: 1,
   },
-  {
-    id: "4",
-    testType: "Hormone Tests",
-    testName: "Thyroid Profile (T3, T4, TSH)",
-    description: "Measures thyroid hormone levels to assess thyroid function.",
-    timeAvailable: "Sunday to Wednesday 8AM–12PM",
-    cost: "1500",
-    preparationInstructions: "Morning sample preferred. Inform about any thyroid medications.",
-  },
-]
-
-const initialPendingPatients: PendingPatient[] = [
-  {
-    id: "p1",
-    patientName: "Rahim Ahmed",
-    testName: "Complete Blood Count (CBC)",
-    dateBooked: "2024-01-15",
-    uploadedFiles: [],
-  },
-  {
-    id: "p2",
-    patientName: "Fatima Khan",
-    testName: "Thyroid Profile (T3, T4, TSH)",
-    dateBooked: "2024-01-14",
-    uploadedFiles: [],
-  },
-  {
-    id: "p3",
-    patientName: "Karim Hossain",
-    testName: "Chest X-Ray",
-    dateBooked: "2024-01-13",
-    uploadedFiles: [],
-  },
-]
-
-const initialCompletedPatients: CompletedPatient[] = [
-  {
-    id: "c1",
-    patientName: "Nasreen Begum",
-    testName: "ECG (Electrocardiogram)",
-    dateCompleted: "2024-01-12",
-    reportFiles: [{ name: "ECG_Report.pdf", uploadedAt: "2024-01-12" }],
-  },
-]
-
-const initialEmergencyPatients: EmergencyPatient[] = [
-  {
-    id: "e1",
-    patientName: "Abdul Rahman",
-    ticketNumber: "EM-001",
-    status: "in progress",
-    createdAt: "2024-01-15",
-  },
-  {
-    id: "e2",
-    patientName: "Salma Akter",
-    ticketNumber: "EM-002",
-    status: "in progress",
-    createdAt: "2024-01-15",
-  },
-]
-
-const initialBeds: HospitalBed[] = [
-  { id: "b1", bedNumber: "W-101", bedType: "Ward", status: "Available", assignedPatient: null },
-  { id: "b2", bedNumber: "W-102", bedType: "Ward", status: "Occupied", assignedPatient: "Mohammad Ali" },
-  { id: "b3", bedNumber: "C-201", bedType: "Cabin", status: "Available", assignedPatient: null },
-  { id: "b4", bedNumber: "C-202", bedType: "Cabin", status: "Occupied", assignedPatient: "Rahima Begum" },
-  { id: "b5", bedNumber: "ICU-01", bedType: "ICU", status: "Available", assignedPatient: null },
-  { id: "b6", bedNumber: "ICU-02", bedType: "ICU", status: "Occupied", assignedPatient: "Jamal Uddin" },
 ]
 
 const sidebarLinks = [
@@ -285,33 +412,25 @@ export default function HospitalDashboardPage() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [activeTab, setActiveTab] = useState("dashboard")
 
-  // Emergency Queue state
-  const [emergencyPatients, setEmergencyPatients] = useState<EmergencyPatient[]>(initialEmergencyPatients)
+  // Multi-hospital state
+  const [hospitalsData, setHospitalsData] = useState<HospitalData[]>(initialHospitalsData)
+  const [selectedHospitalId, setSelectedHospitalId] = useState<string>(initialHospitalsData[0].id)
+
+  // Get current hospital data
+  const currentHospital = hospitalsData.find(h => h.id === selectedHospitalId) || hospitalsData[0]
+
+  // Dialog states
   const [emergencyDialogOpen, setEmergencyDialogOpen] = useState(false)
   const [emergencyPatientName, setEmergencyPatientName] = useState("")
-  const [ticketCounter, setTicketCounter] = useState(3)
-
-  // Bed Management state
-  const [beds, setBeds] = useState<HospitalBed[]>(initialBeds)
   const [bedDialogOpen, setBedDialogOpen] = useState(false)
   const [bedForm, setBedForm] = useState({ bedNumber: "", bedType: "Ward" as "Ward" | "Cabin" | "ICU" })
   const [assignPatientDialogOpen, setAssignPatientDialogOpen] = useState(false)
   const [assigningBedId, setAssigningBedId] = useState<string | null>(null)
   const [assignPatientName, setAssignPatientName] = useState("")
-
-  // Computed dashboard stats (auto-updating)
-  const emergencyQueueCount = emergencyPatients.filter(p => p.status === "in progress").length
-  const availableBeds = beds.filter(b => b.status === "Available").length
-  const totalBeds = beds.length
-
-  // Medical Tests state
-  const [tests, setTests] = useState<MedicalTest[]>(initialTests)
   const [testDialogOpen, setTestDialogOpen] = useState(false)
   const [editingTest, setEditingTest] = useState<MedicalTest | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [testToDelete, setTestToDelete] = useState<string | null>(null)
-
-  // Test form state
   const [testForm, setTestForm] = useState({
     testType: "",
     testName: "",
@@ -320,12 +439,20 @@ export default function HospitalDashboardPage() {
     cost: "",
     preparationInstructions: "",
   })
-
-  // Patient lists state
-  const [pendingPatients, setPendingPatients] = useState<PendingPatient[]>(initialPendingPatients)
-  const [completedPatients, setCompletedPatients] = useState<CompletedPatient[]>(initialCompletedPatients)
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [uploadingPatientId, setUploadingPatientId] = useState<string | null>(null)
+
+  // Computed dashboard stats from current hospital
+  const emergencyQueueCount = currentHospital.emergencyPatients.filter(p => p.status === "in progress").length
+  const availableBeds = currentHospital.beds.filter(b => b.status === "Available").length
+  const totalBeds = currentHospital.beds.length
+
+  // Helper to update current hospital data
+  const updateCurrentHospital = (updates: Partial<HospitalData>) => {
+    setHospitalsData(hospitalsData.map(h => 
+      h.id === selectedHospitalId ? { ...h, ...updates } : h
+    ))
+  }
 
   // Emergency Queue handlers
   const handleAddEmergencyPatient = () => {
@@ -334,21 +461,23 @@ export default function HospitalDashboardPage() {
     const newPatient: EmergencyPatient = {
       id: Date.now().toString(),
       patientName: emergencyPatientName.trim(),
-      ticketNumber: `EM-${String(ticketCounter).padStart(3, "0")}`,
+      ticketNumber: `EM-${String(currentHospital.ticketCounter).padStart(3, "0")}`,
       status: "in progress",
       createdAt: new Date().toISOString().split("T")[0],
     }
 
-    setEmergencyPatients([...emergencyPatients, newPatient])
-    setTicketCounter(ticketCounter + 1)
+    updateCurrentHospital({
+      emergencyPatients: [...currentHospital.emergencyPatients, newPatient],
+      ticketCounter: currentHospital.ticketCounter + 1,
+    })
     setEmergencyPatientName("")
     setEmergencyDialogOpen(false)
   }
 
   const handleMarkEmergencyCompleted = (patientId: string) => {
-    setEmergencyPatients(
-      emergencyPatients.filter(p => p.id !== patientId)
-    )
+    updateCurrentHospital({
+      emergencyPatients: currentHospital.emergencyPatients.filter(p => p.id !== patientId)
+    })
   }
 
   // Bed Management handlers
@@ -363,7 +492,9 @@ export default function HospitalDashboardPage() {
       assignedPatient: null,
     }
 
-    setBeds([...beds, newBed])
+    updateCurrentHospital({
+      beds: [...currentHospital.beds, newBed]
+    })
     setBedForm({ bedNumber: "", bedType: "Ward" })
     setBedDialogOpen(false)
   }
@@ -377,26 +508,26 @@ export default function HospitalDashboardPage() {
   const handleAssignPatient = () => {
     if (!assigningBedId || !assignPatientName.trim()) return
 
-    setBeds(
-      beds.map(b =>
+    updateCurrentHospital({
+      beds: currentHospital.beds.map(b =>
         b.id === assigningBedId
           ? { ...b, status: "Occupied" as const, assignedPatient: assignPatientName.trim() }
           : b
       )
-    )
+    })
     setAssignPatientName("")
     setAssigningBedId(null)
     setAssignPatientDialogOpen(false)
   }
 
   const handleMarkBedAvailable = (bedId: string) => {
-    setBeds(
-      beds.map(b =>
+    updateCurrentHospital({
+      beds: currentHospital.beds.map(b =>
         b.id === bedId
           ? { ...b, status: "Available" as const, assignedPatient: null }
           : b
       )
-    )
+    })
   }
 
   // Test CRUD handlers
@@ -428,17 +559,19 @@ export default function HospitalDashboardPage() {
 
   const handleSaveTest = () => {
     if (editingTest) {
-      setTests(
-        tests.map((t) =>
+      updateCurrentHospital({
+        tests: currentHospital.tests.map((t) =>
           t.id === editingTest.id ? { ...t, ...testForm } : t
         )
-      )
+      })
     } else {
       const newTest: MedicalTest = {
         id: Date.now().toString(),
         ...testForm,
       }
-      setTests([...tests, newTest])
+      updateCurrentHospital({
+        tests: [...currentHospital.tests, newTest]
+      })
     }
     setTestDialogOpen(false)
   }
@@ -450,7 +583,9 @@ export default function HospitalDashboardPage() {
 
   const handleDeleteTest = () => {
     if (testToDelete) {
-      setTests(tests.filter((t) => t.id !== testToDelete))
+      updateCurrentHospital({
+        tests: currentHospital.tests.filter((t) => t.id !== testToDelete)
+      })
       setTestToDelete(null)
     }
     setDeleteDialogOpen(false)
@@ -471,18 +606,18 @@ export default function HospitalDashboardPage() {
       uploadedAt: new Date().toISOString().split("T")[0],
     }))
 
-    setPendingPatients(
-      pendingPatients.map((p) =>
+    updateCurrentHospital({
+      pendingPatients: currentHospital.pendingPatients.map((p) =>
         p.id === uploadingPatientId
           ? { ...p, uploadedFiles: [...p.uploadedFiles, ...newFiles] }
           : p
       )
-    )
+    })
     setUploadDialogOpen(false)
   }
 
   const handleMarkAsCompleted = (patientId: string) => {
-    const patient = pendingPatients.find((p) => p.id === patientId)
+    const patient = currentHospital.pendingPatients.find((p) => p.id === patientId)
     if (!patient || patient.uploadedFiles.length === 0) return
 
     const completedPatient: CompletedPatient = {
@@ -493,8 +628,10 @@ export default function HospitalDashboardPage() {
       reportFiles: patient.uploadedFiles,
     }
 
-    setPendingPatients(pendingPatients.filter((p) => p.id !== patientId))
-    setCompletedPatients([completedPatient, ...completedPatients])
+    updateCurrentHospital({
+      pendingPatients: currentHospital.pendingPatients.filter((p) => p.id !== patientId),
+      completedPatients: [completedPatient, ...currentHospital.completedPatients]
+    })
   }
 
   return (
@@ -532,13 +669,35 @@ export default function HospitalDashboardPage() {
               <span className="font-semibold">Hospital Dashboard</span>
             </div>
           </div>
+          
+          {/* Hospital Selector */}
+          <div className="flex items-center gap-2">
+            <Select value={selectedHospitalId} onValueChange={setSelectedHospitalId}>
+              <SelectTrigger className="w-[280px]">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  <SelectValue placeholder="Select hospital" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {hospitalsData.map((hospital) => (
+                  <SelectItem key={hospital.id} value={hospital.id}>
+                    {hospital.profile.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </header>
 
         {/* Page Content */}
         <main className="flex-1 p-4 lg:p-6">
           {activeTab === "dashboard" && (
             <div className="space-y-6">
-              <h1 className="text-2xl font-bold">Dashboard Overview</h1>
+              <div className="flex flex-col gap-1">
+                <h1 className="text-2xl font-bold">{currentHospital.profile.name}</h1>
+                <p className="text-sm text-muted-foreground">{currentHospital.profile.address}</p>
+              </div>
               
               {/* Stats Cards */}
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -606,7 +765,7 @@ export default function HospitalDashboardPage() {
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  {emergencyPatients.filter(p => p.status === "in progress").length === 0 ? (
+                  {currentHospital.emergencyPatients.filter(p => p.status === "in progress").length === 0 ? (
                     <p className="text-muted-foreground text-center py-8">
                       No emergency patients in queue
                     </p>
@@ -621,7 +780,7 @@ export default function HospitalDashboardPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {emergencyPatients
+                        {currentHospital.emergencyPatients
                           .filter(p => p.status === "in progress")
                           .map((patient) => (
                             <TableRow key={patient.id}>
@@ -661,7 +820,7 @@ export default function HospitalDashboardPage() {
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  {beds.length === 0 ? (
+                  {currentHospital.beds.length === 0 ? (
                     <p className="text-muted-foreground text-center py-8">
                       No beds added yet
                     </p>
@@ -677,7 +836,7 @@ export default function HospitalDashboardPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {beds.map((bed) => (
+                        {currentHospital.beds.map((bed) => (
                           <TableRow key={bed.id}>
                             <TableCell className="font-medium">{bed.bedNumber}</TableCell>
                             <TableCell>
@@ -692,7 +851,7 @@ export default function HospitalDashboardPage() {
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              {bed.assignedPatient || <span className="text-muted-foreground">—</span>}
+                              {bed.assignedPatient || <span className="text-muted-foreground">-</span>}
                             </TableCell>
                             <TableCell className="text-right">
                               {bed.status === "Available" ? (
@@ -726,7 +885,10 @@ export default function HospitalDashboardPage() {
           {activeTab === "tests" && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Medical Tests</h1>
+                <div>
+                  <h1 className="text-2xl font-bold">Medical Tests</h1>
+                  <p className="text-sm text-muted-foreground">{currentHospital.profile.name}</p>
+                </div>
                 <Button onClick={openAddTestDialog}>
                   <Plus className="mr-2 h-4 w-4" />
                   Add New Test
@@ -742,47 +904,53 @@ export default function HospitalDashboardPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Test Name</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Time Available</TableHead>
-                        <TableHead>Cost (BDT)</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {tests.map((test) => (
-                        <TableRow key={test.id}>
-                          <TableCell className="font-medium">
-                            {test.testName}
-                          </TableCell>
-                          <TableCell>{test.testType}</TableCell>
-                          <TableCell>{test.timeAvailable}</TableCell>
-                          <TableCell>{test.cost}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => openEditTestDialog(test)}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => openDeleteDialog(test.id)}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
+                  {currentHospital.tests.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8">
+                      No medical tests added yet
+                    </p>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Test Name</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Time Available</TableHead>
+                          <TableHead>Cost (BDT)</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {currentHospital.tests.map((test) => (
+                          <TableRow key={test.id}>
+                            <TableCell className="font-medium">
+                              {test.testName}
+                            </TableCell>
+                            <TableCell>{test.testType}</TableCell>
+                            <TableCell>{test.timeAvailable}</TableCell>
+                            <TableCell>{test.cost}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => openEditTestDialog(test)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => openDeleteDialog(test.id)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
                 </CardContent>
               </Card>
 
@@ -790,10 +958,10 @@ export default function HospitalDashboardPage() {
               <Tabs defaultValue="pending" className="w-full">
                 <TabsList>
                   <TabsTrigger value="pending">
-                    Pending Patients ({pendingPatients.length})
+                    Pending Patients ({currentHospital.pendingPatients.length})
                   </TabsTrigger>
                   <TabsTrigger value="completed">
-                    Completed Patients ({completedPatients.length})
+                    Completed Patients ({currentHospital.completedPatients.length})
                   </TabsTrigger>
                 </TabsList>
 
@@ -806,7 +974,7 @@ export default function HospitalDashboardPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      {pendingPatients.length === 0 ? (
+                      {currentHospital.pendingPatients.length === 0 ? (
                         <p className="text-muted-foreground text-center py-8">
                           No pending patients
                         </p>
@@ -822,7 +990,7 @@ export default function HospitalDashboardPage() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {pendingPatients.map((patient) => (
+                            {currentHospital.pendingPatients.map((patient) => (
                               <TableRow key={patient.id}>
                                 <TableCell className="font-medium">
                                   {patient.patientName}
@@ -887,7 +1055,7 @@ export default function HospitalDashboardPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      {completedPatients.length === 0 ? (
+                      {currentHospital.completedPatients.length === 0 ? (
                         <p className="text-muted-foreground text-center py-8">
                           No completed patients
                         </p>
@@ -902,7 +1070,7 @@ export default function HospitalDashboardPage() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {completedPatients.map((patient) => (
+                            {currentHospital.completedPatients.map((patient) => (
                               <TableRow key={patient.id}>
                                 <TableCell className="font-medium">
                                   {patient.patientName}
@@ -939,15 +1107,26 @@ export default function HospitalDashboardPage() {
               <h1 className="text-2xl font-bold">Settings</h1>
               <Card>
                 <CardHeader>
-                  <CardTitle>Hospital Settings</CardTitle>
+                  <CardTitle>Hospital Profile</CardTitle>
                   <CardDescription>
-                    Configure your hospital preferences
+                    Current hospital information
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Settings panel coming soon.
-                  </p>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <Label className="text-muted-foreground">Hospital Name</Label>
+                      <p className="font-medium">{currentHospital.profile.name}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">License Number</Label>
+                      <p className="font-medium">{currentHospital.profile.licenseNumber}</p>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label className="text-muted-foreground">Address</Label>
+                      <p className="font-medium">{currentHospital.profile.address}</p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -961,7 +1140,7 @@ export default function HospitalDashboardPage() {
           <DialogHeader>
             <DialogTitle>Add Emergency Patient</DialogTitle>
             <DialogDescription>
-              Issue a ticket for a new emergency patient
+              Issue a ticket for a new emergency patient at {currentHospital.profile.name}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -975,7 +1154,7 @@ export default function HospitalDashboardPage() {
               />
             </div>
             <p className="text-sm text-muted-foreground">
-              Ticket will be assigned: <Badge variant="secondary">EM-{String(ticketCounter).padStart(3, "0")}</Badge>
+              Ticket will be assigned: <Badge variant="secondary">EM-{String(currentHospital.ticketCounter).padStart(3, "0")}</Badge>
             </p>
           </div>
           <DialogFooter>
@@ -995,7 +1174,7 @@ export default function HospitalDashboardPage() {
           <DialogHeader>
             <DialogTitle>Add New Bed</DialogTitle>
             <DialogDescription>
-              Add a new bed to the hospital
+              Add a new bed to {currentHospital.profile.name}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -1134,7 +1313,7 @@ export default function HospitalDashboardPage() {
                 <Label htmlFor="timeAvailable">Time Available</Label>
                 <Input
                   id="timeAvailable"
-                  placeholder="e.g., Sunday to Thursday 10AM–2PM"
+                  placeholder="e.g., Sunday to Thursday 10AM-2PM"
                   value={testForm.timeAvailable}
                   onChange={(e) =>
                     setTestForm({ ...testForm, timeAvailable: e.target.value })
