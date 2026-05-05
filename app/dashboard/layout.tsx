@@ -30,6 +30,7 @@ import {
   Shield,
   Heart,
   Stethoscope,
+  Cross,
 } from "lucide-react"
 
 const sidebarLinks = [
@@ -37,6 +38,7 @@ const sidebarLinks = [
   { href: "/dashboard/profile", label: "Medical Profile", icon: User },
   { href: "/dashboard/hospitals", label: "Nearby Hospitals", icon: MapPin },
   { href: "/dashboard/doctors", label: "Find Doctors", icon: Stethoscope },
+  { href: "/dashboard/nurses", label: "Find Nurses", icon: Cross },
   { href: "/dashboard/appointments", label: "Appointments", icon: Calendar },
   { href: "/dashboard/tests", label: "Medical Tests", icon: TestTube },
   { href: "/dashboard/reports", label: "Test Reports", icon: FileText },
