@@ -1,15 +1,29 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import dynamic from "next/dynamic"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Upload, MapPin } from "lucide-react"
+import { Upload } from "lucide-react"
 import { registerHospital } from "@/lib/mock-data"
+
+// Dynamically import map component to avoid SSR issues
+const LocationPickerMap = dynamic(() => import("@/components/location-picker-map"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-64 rounded-lg border border-border bg-muted flex items-center justify-center">
+      <div className="flex flex-col items-center gap-2">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <span className="text-sm text-muted-foreground">Loading map...</span>
+      </div>
+    </div>
+  ),
+})
 
 export default function HospitalRegistrationPage() {
   const router = useRouter()
@@ -22,8 +36,11 @@ export default function HospitalRegistrationPage() {
     email: "",
     password: "",
   })
-  const [pinPosition, setPinPosition] = useState({ x: 50, y: 50 })
-  const [isDragging, setIsDragging] = useState(false)
+  const [location, setLocation] = useState({ lat: 23.8103, lng: 90.4125 })
+
+  const handleLocationChange = useCallback((lat: number, lng: number) => {
+    setLocation({ lat, lng })
+  }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -33,21 +50,6 @@ export default function HospitalRegistrationPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null
     setFormData((prev) => ({ ...prev, licenseDocument: file }))
-  }
-
-  const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = ((e.clientX - rect.left) / rect.width) * 100
-    const y = ((e.clientY - rect.top) / rect.height) * 100
-    setPinPosition({ x, y })
-  }
-
-  const handlePinDrag = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging) return
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100))
-    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100))
-    setPinPosition({ x, y })
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -60,6 +62,7 @@ export default function HospitalRegistrationPage() {
       licenseNumber: formData.licenseNumber,
       address: formData.address,
       phone: formData.phone,
+      location: location,
     })
     
     router.push("/hospital/login")
@@ -161,75 +164,10 @@ export default function HospitalRegistrationPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Hospital Location (Click or drag pin on map)</Label>
-              <div
-                className="relative w-full h-64 rounded-lg border border-border overflow-hidden cursor-crosshair bg-muted"
-                onClick={handleMapClick}
-                onMouseMove={handlePinDrag}
-                onMouseUp={() => setIsDragging(false)}
-                onMouseLeave={() => setIsDragging(false)}
-              >
-                {/* Static Dhaka Map Placeholder */}
-                <div className="absolute inset-0 bg-gradient-to-br from-secondary/10 to-primary/10">
-                  <svg
-                    viewBox="0 0 400 300"
-                    className="w-full h-full"
-                    preserveAspectRatio="xMidYMid slice"
-                  >
-                    {/* Grid lines for map effect */}
-                    {[...Array(10)].map((_, i) => (
-                      <line
-                        key={`v-${i}`}
-                        x1={i * 40}
-                        y1="0"
-                        x2={i * 40}
-                        y2="300"
-                        stroke="currentColor"
-                        strokeOpacity="0.1"
-                      />
-                    ))}
-                    {[...Array(8)].map((_, i) => (
-                      <line
-                        key={`h-${i}`}
-                        x1="0"
-                        y1={i * 40}
-                        x2="400"
-                        y2={i * 40}
-                        stroke="currentColor"
-                        strokeOpacity="0.1"
-                      />
-                    ))}
-                    {/* Simplified Dhaka landmarks */}
-                    <circle cx="200" cy="150" r="60" fill="currentColor" fillOpacity="0.05" />
-                    <circle cx="200" cy="150" r="30" fill="currentColor" fillOpacity="0.08" />
-                    <text x="200" y="155" textAnchor="middle" className="text-xs fill-muted-foreground">
-                      Dhaka
-                    </text>
-                    <text x="120" y="100" textAnchor="middle" className="text-[10px] fill-muted-foreground">
-                      Mirpur
-                    </text>
-                    <text x="280" y="100" textAnchor="middle" className="text-[10px] fill-muted-foreground">
-                      Gulshan
-                    </text>
-                    <text x="150" y="220" textAnchor="middle" className="text-[10px] fill-muted-foreground">
-                      Dhanmondi
-                    </text>
-                    <text x="260" y="220" textAnchor="middle" className="text-[10px] fill-muted-foreground">
-                      Motijheel
-                    </text>
-                  </svg>
-                </div>
-                {/* Draggable Pin */}
-                <div
-                  className="absolute transform -translate-x-1/2 -translate-y-full cursor-grab active:cursor-grabbing"
-                  style={{ left: `${pinPosition.x}%`, top: `${pinPosition.y}%` }}
-                  onMouseDown={() => setIsDragging(true)}
-                >
-                  <MapPin className="h-8 w-8 text-destructive drop-shadow-lg" />
-                </div>
-              </div>
+              <Label>Hospital Location</Label>
+              <LocationPickerMap onLocationChange={handleLocationChange} />
               <p className="text-xs text-muted-foreground">
-                Click on the map or drag the pin to set your hospital location
+                Move the map to position the pin at your hospital location
               </p>
             </div>
 

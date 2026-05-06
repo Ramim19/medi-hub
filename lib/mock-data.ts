@@ -16,6 +16,7 @@ export interface Hospital {
   licenseNumber: string
   address: string
   phone: string
+  location?: { lat: number; lng: number }
   status: "pending" | "approved"
   registeredAt: string
 }
@@ -68,6 +69,7 @@ const defaultHospitals: Hospital[] = [
     licenseNumber: "DMCH-2024-001",
     address: "Secretariat Road, Dhaka 1000",
     phone: "+880 2-55165001",
+    location: { lat: 23.7260, lng: 90.3980 },
     status: "approved",
     registeredAt: "2024-01-05",
   },
@@ -78,6 +80,7 @@ const defaultHospitals: Hospital[] = [
     licenseNumber: "SQH-2024-002",
     address: "18/F Bir Uttam Qazi Nuruzzaman Sarak, Dhaka 1205",
     phone: "+880 2-8159457",
+    location: { lat: 23.7528, lng: 90.3761 },
     status: "approved",
     registeredAt: "2024-01-08",
   },
@@ -88,6 +91,7 @@ const defaultHospitals: Hospital[] = [
     licenseNumber: "UHL-2024-003",
     address: "Plot 15, Road 71, Gulshan, Dhaka 1212",
     phone: "+880 2-8836000",
+    location: { lat: 23.7937, lng: 90.4147 },
     status: "approved",
     registeredAt: "2024-01-10",
   },
@@ -98,6 +102,7 @@ const defaultHospitals: Hospital[] = [
     licenseNumber: "EVH-2024-004",
     address: "Plot 81, Block E, Bashundhara R/A, Dhaka",
     phone: "+880 2-8432000",
+    location: { lat: 23.8194, lng: 90.4322 },
     status: "pending",
     registeredAt: "2024-01-22",
   },
@@ -108,6 +113,7 @@ const defaultHospitals: Hospital[] = [
     licenseNumber: "PDC-2024-005",
     address: "House 16, Road 2, Dhanmondi, Dhaka",
     phone: "+880 2-9116522",
+    location: { lat: 23.7461, lng: 90.3742 },
     status: "pending",
     registeredAt: "2024-01-25",
   },
