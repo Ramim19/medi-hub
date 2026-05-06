@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import {
   Calendar,
-  MapPin,
+  MapPin,daily
   FileText,
   TestTube,
   Clock,
