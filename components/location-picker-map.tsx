@@ -99,31 +99,22 @@ export default function LocationPickerMap({
       {/* Map container */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
 
-      {/* Fixed center pin overlay - Solid red pin */}
+      {/* Fixed center pin overlay */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
         <div className="relative flex flex-col items-center">
-          {/* Pin head */}
-          <svg 
-            width="40" 
-            height="50" 
-            viewBox="0 0 40 50" 
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img 
+            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-PqwAEuUmCChcy4fkF45zpJVDhXTOXI.png"
+            alt="Location pin"
+            width={40}
+            height={48}
             className="drop-shadow-lg"
-            style={{ transform: "translateY(-25px)" }}
-          >
-            {/* Pin body */}
-            <path
-              d="M20 0C8.954 0 0 8.954 0 20c0 11.046 20 30 20 30s20-18.954 20-30C40 8.954 31.046 0 20 0z"
-              fill="#dc2626"
-            />
-            {/* Inner circle */}
-            <circle cx="20" cy="18" r="8" fill="#ffffff" />
-            {/* Center dot */}
-            <circle cx="20" cy="18" r="4" fill="#dc2626" />
-          </svg>
+            style={{ transform: "translateY(-24px)" }}
+          />
           {/* Ground shadow */}
           <div 
             className="absolute w-3 h-1.5 bg-black/20 rounded-full blur-[1px]"
-            style={{ bottom: "25px" }}
+            style={{ bottom: "24px" }}
           />
         </div>
       </div>
