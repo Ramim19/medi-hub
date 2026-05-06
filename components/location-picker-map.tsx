@@ -1,11 +1,10 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { MapPin } from "lucide-react"
 
-// Dhaka coordinates
+// Dhaka coordinates as fallback
 const DHAKA_CENTER = { lat: 23.8103, lng: 90.4125 }
-const DEFAULT_ZOOM = 13
+const DEFAULT_ZOOM = 15
 
 interface LocationPickerMapProps {
   onLocationChange?: (lat: number, lng: number) => void
@@ -15,25 +14,32 @@ interface LocationPickerMapProps {
 
 export default function LocationPickerMap({
   onLocationChange,
-  initialLat = DHAKA_CENTER.lat,
-  initialLng = DHAKA_CENTER.lng,
+  initialLat,
+  initialLng,
 }: LocationPickerMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
-  const [currentLocation, setCurrentLocation] = useState({ lat: initialLat, lng: initialLng })
+  const [isLocating, setIsLocating] = useState(false)
+  const [currentLocation, setCurrentLocation] = useState({ 
+    lat: initialLat ?? DHAKA_CENTER.lat, 
+    lng: initialLng ?? DHAKA_CENTER.lng 
+  })
 
   useEffect(() => {
-    // Dynamically import Leaflet to avoid SSR issues
     const initMap = async () => {
       if (typeof window === "undefined" || !mapContainerRef.current || mapRef.current) return
 
       const L = (await import("leaflet")).default
       await import("leaflet/dist/leaflet.css")
 
-      // Create map centered on Dhaka
+      // Start with fallback location
+      let startLat = initialLat ?? DHAKA_CENTER.lat
+      let startLng = initialLng ?? DHAKA_CENTER.lng
+
+      // Create map
       const map = L.map(mapContainerRef.current, {
-        center: [initialLat, initialLng],
+        center: [startLat, startLng],
         zoom: DEFAULT_ZOOM,
         zoomControl: true,
         attributionControl: true,
@@ -55,8 +61,27 @@ export default function LocationPickerMap({
       mapRef.current = map
       setIsLoaded(true)
 
-      // Trigger initial location callback
-      onLocationChange?.(initialLat, initialLng)
+      // Try to get user's current location
+      if (!initialLat && !initialLng && navigator.geolocation) {
+        setIsLocating(true)
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords
+            map.setView([latitude, longitude], DEFAULT_ZOOM)
+            setCurrentLocation({ lat: latitude, lng: longitude })
+            onLocationChange?.(latitude, longitude)
+            setIsLocating(false)
+          },
+          () => {
+            // Geolocation failed, keep Dhaka as default
+            setIsLocating(false)
+            onLocationChange?.(startLat, startLng)
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        )
+      } else {
+        onLocationChange?.(startLat, startLng)
+      }
     }
 
     initMap()
@@ -74,27 +99,49 @@ export default function LocationPickerMap({
       {/* Map container */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
 
-      {/* Fixed center pin overlay */}
+      {/* Fixed center pin overlay - Solid red pin */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
-        <div className="relative">
-          <MapPin className="h-10 w-10 text-destructive drop-shadow-lg transform -translate-y-1/2" />
-          {/* Pin shadow/dot at exact center */}
-          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1 w-2 h-2 bg-destructive/30 rounded-full" />
+        <div className="relative flex flex-col items-center">
+          {/* Pin head */}
+          <svg 
+            width="40" 
+            height="50" 
+            viewBox="0 0 40 50" 
+            className="drop-shadow-lg"
+            style={{ transform: "translateY(-25px)" }}
+          >
+            {/* Pin body */}
+            <path
+              d="M20 0C8.954 0 0 8.954 0 20c0 11.046 20 30 20 30s20-18.954 20-30C40 8.954 31.046 0 20 0z"
+              fill="#dc2626"
+            />
+            {/* Inner circle */}
+            <circle cx="20" cy="18" r="8" fill="#ffffff" />
+            {/* Center dot */}
+            <circle cx="20" cy="18" r="4" fill="#dc2626" />
+          </svg>
+          {/* Ground shadow */}
+          <div 
+            className="absolute w-3 h-1.5 bg-black/20 rounded-full blur-[1px]"
+            style={{ bottom: "25px" }}
+          />
         </div>
       </div>
 
       {/* Loading overlay */}
-      {!isLoaded && (
+      {(!isLoaded || isLocating) && (
         <div className="absolute inset-0 bg-muted flex items-center justify-center z-20">
           <div className="flex flex-col items-center gap-2">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            <span className="text-sm text-muted-foreground">Loading map...</span>
+            <span className="text-sm text-muted-foreground">
+              {isLocating ? "Getting your location..." : "Loading map..."}
+            </span>
           </div>
         </div>
       )}
 
       {/* Coordinates display */}
-      {isLoaded && (
+      {isLoaded && !isLocating && (
         <div className="absolute bottom-2 left-2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-xs text-muted-foreground z-10">
           {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}
         </div>
