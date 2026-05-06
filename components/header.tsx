@@ -47,10 +47,10 @@ export function Header() {
 
         <div className="hidden items-center gap-3 lg:flex">
           <Button variant="outline" size="sm" asChild>
-            <Link href="/dashboard">Sign In</Link>
+            <Link href="/login">Sign In</Link>
           </Button>
           <Button size="sm" asChild>
-            <Link href="/dashboard">Patient Dashboard</Link>
+            <Link href="/Signup">Sign Up</Link>
           </Button>
         </div>
 
@@ -76,10 +76,10 @@ export function Header() {
               ))}
               <div className="mt-4 flex flex-col gap-3">
                 <Button variant="outline" className="w-full" asChild>
-                  <Link href="/dashboard" onClick={() => setIsOpen(false)}>Sign In</Link>
+                  <Link href="/login" onClick={() => setIsOpen(false)}>Sign In</Link>
                 </Button>
                 <Button className="w-full" asChild>
-                  <Link href="/dashboard" onClick={() => setIsOpen(false)}>Patient Dashboard</Link>
+                  <Link href="/signup" onClick={() => setIsOpen(false)}>Sign Up</Link>
                 </Button>
               </div>
             </nav>
