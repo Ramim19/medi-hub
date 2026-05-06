@@ -8,28 +8,17 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Building2, AlertCircle } from "lucide-react"
-import { getHospitals, setLoggedInHospital, type Hospital } from "@/lib/mock-data"
+import { Shield, AlertCircle } from "lucide-react"
+import { ADMIN_CREDENTIALS } from "@/lib/mock-data"
 
-export default function HospitalLoginPage() {
+export default function AdminLoginPage() {
   const router = useRouter()
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   })
-  const [selectedHospital, setSelectedHospital] = useState("")
   const [error, setError] = useState("")
-  
-  // Get hospitals from mock data
-  const hospitals = getHospitals()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -40,26 +29,31 @@ export default function HospitalLoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!selectedHospital) {
-      setError("Please select a hospital")
-      return
+    if (
+      formData.email === ADMIN_CREDENTIALS.email &&
+      formData.password === ADMIN_CREDENTIALS.password
+    ) {
+      // Store admin session
+      if (typeof window !== "undefined") {
+        localStorage.setItem("medihub_admin_logged_in", "true")
+      }
+      router.push("/admin/dashboard")
+    } else {
+      setError("Invalid email or password. Please try again.")
     }
-    
-    // Set logged in hospital and redirect to status page
-    setLoggedInHospital(selectedHospital)
-    router.push("/hospital/status")
   }
 
-  const handleDemoLogin = (hospital: Hospital) => {
+  const handleDemoLogin = () => {
     setFormData({
-      email: hospital.email,
-      password: "123456",
+      email: ADMIN_CREDENTIALS.email,
+      password: ADMIN_CREDENTIALS.password,
     })
-    setSelectedHospital(hospital.id)
     
-    // Set logged in hospital and redirect to status page
-    setLoggedInHospital(hospital.id)
-    router.push("/hospital/status")
+    // Auto-submit after filling credentials
+    if (typeof window !== "undefined") {
+      localStorage.setItem("medihub_admin_logged_in", "true")
+    }
+    router.push("/admin/dashboard")
   }
 
   return (
@@ -77,9 +71,12 @@ export default function HospitalLoginPage() {
                 className="h-10 w-auto"
               />
             </Link>
-            <CardTitle className="text-2xl">Hospital Login</CardTitle>
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Shield className="h-6 w-6 text-primary" />
+              <CardTitle className="text-2xl">Admin Login</CardTitle>
+            </div>
             <CardDescription>
-              Sign in to access your hospital dashboard
+              Sign in to access the admin dashboard
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -90,25 +87,6 @@ export default function HospitalLoginPage() {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              
-              <div className="space-y-2">
-                <Label htmlFor="hospital">Select Hospital</Label>
-                <Select value={selectedHospital} onValueChange={(value) => {
-                  setSelectedHospital(value)
-                  setError("")
-                }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a hospital" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {hospitals.map((hospital) => (
-                      <SelectItem key={hospital.id} value={hospital.id}>
-                        {hospital.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -116,7 +94,7 @@ export default function HospitalLoginPage() {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="hospital@example.com"
+                  placeholder="admin@medihub.com"
                   value={formData.email}
                   onChange={handleInputChange}
                   required
@@ -141,9 +119,8 @@ export default function HospitalLoginPage() {
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">
-                {"Don't have an account?"}{" "}
-                <Link href="/hospital/register" className="text-primary hover:underline">
-                  Register here
+                <Link href="/" className="text-primary hover:underline">
+                  Back to Home
                 </Link>
               </p>
             </form>
@@ -153,37 +130,35 @@ export default function HospitalLoginPage() {
         {/* Demo Login Card */}
         <Card className="border-dashed border-2 border-primary/30 bg-primary/5">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Demo Login</CardTitle>
+            <CardTitle className="text-lg">Demo Credentials</CardTitle>
             <CardDescription>
-              Quick access to demo hospital dashboards
+              Use these credentials to test the admin dashboard
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="text-sm space-y-1 mb-4">
               <p>
+                <span className="text-muted-foreground">Email:</span>{" "}
+                <code className="bg-muted px-1.5 py-0.5 rounded text-foreground">
+                  {ADMIN_CREDENTIALS.email}
+                </code>
+              </p>
+              <p>
                 <span className="text-muted-foreground">Password:</span>{" "}
-                <code className="bg-muted px-1.5 py-0.5 rounded text-foreground">123456</code>
+                <code className="bg-muted px-1.5 py-0.5 rounded text-foreground">
+                  {ADMIN_CREDENTIALS.password}
+                </code>
               </p>
             </div>
-            <div className="space-y-2">
-              {hospitals.slice(0, 5).map((hospital) => (
-                <Button
-                  key={hospital.id}
-                  type="button"
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => handleDemoLogin(hospital)}
-                >
-                  <Building2 className="mr-2 h-4 w-4" />
-                  <span className="flex-1 text-left truncate">{hospital.name}</span>
-                  {hospital.status === "pending" && (
-                    <span className="ml-2 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">
-                      Pending
-                    </span>
-                  )}
-                </Button>
-              ))}
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleDemoLogin}
+            >
+              <Shield className="mr-2 h-4 w-4" />
+              Login with Demo Credentials
+            </Button>
           </CardContent>
         </Card>
       </div>

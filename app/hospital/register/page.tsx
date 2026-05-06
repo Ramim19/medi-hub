@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Upload, MapPin } from "lucide-react"
+import { registerHospital } from "@/lib/mock-data"
 
 export default function HospitalRegistrationPage() {
   const router = useRouter()
@@ -16,6 +17,7 @@ export default function HospitalRegistrationPage() {
     hospitalName: "",
     licenseNumber: "",
     address: "",
+    phone: "",
     licenseDocument: null as File | null,
     email: "",
     password: "",
@@ -50,6 +52,16 @@ export default function HospitalRegistrationPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Register hospital with mock data store
+    registerHospital({
+      name: formData.hospitalName,
+      email: formData.email,
+      licenseNumber: formData.licenseNumber,
+      address: formData.address,
+      phone: formData.phone,
+    })
+    
     router.push("/hospital/login")
   }
 
@@ -107,6 +119,19 @@ export default function HospitalRegistrationPage() {
                 type="text"
                 placeholder="Enter hospital address"
                 value={formData.address}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                name="phone"
+                type="tel"
+                placeholder="+880 2-XXXXXXXX"
+                value={formData.phone}
                 onChange={handleInputChange}
                 required
               />
