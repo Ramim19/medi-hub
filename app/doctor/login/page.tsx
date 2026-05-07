@@ -35,7 +35,9 @@ export default function DoctorLoginPage() {
     // Mock validation with demo credentials
     if (formData.email === DEMO_EMAIL && formData.password === DEMO_PASSWORD) {
       localStorage.setItem("medihub_doctor_logged_in", "true")
-      router.push("/doctor/dashboard")
+      // Generate a simple doctor ID and redirect to dynamic route
+      const doctorId = "doc-" + Date.now().toString(36)
+      router.push(`/doctor/${doctorId}`)
     } else {
       setError("Invalid email or password. Try the demo credentials.")
     }
@@ -44,7 +46,8 @@ export default function DoctorLoginPage() {
   const handleDemoLogin = () => {
     setFormData({ email: DEMO_EMAIL, password: DEMO_PASSWORD })
     localStorage.setItem("medihub_doctor_logged_in", "true")
-    router.push("/doctor/dashboard")
+    const doctorId = "demo-doctor"
+    router.push(`/doctor/${doctorId}`)
   }
 
   return (
