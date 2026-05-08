@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
@@ -188,6 +189,7 @@ export default function PatientsPage() {
   const [selectedPatient, setSelectedPatient] = useState<typeof mockPatients[0] | null>(null)
   const [patientModalOpen, setPatientModalOpen] = useState(false)
   const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null)
+  const [prescriptionComment, setPrescriptionComment] = useState("")
 
   // Get current date's appointment data
   const currentDateData = appointmentData[selectedDate] || {
@@ -728,6 +730,18 @@ export default function PatientsPage() {
                         Selected: {prescriptionFile.name}
                       </p>
                     )}
+                    <div className="mt-3">
+                      <Label htmlFor="prescription-comment" className="text-xs text-muted-foreground">
+                        Comment (optional)
+                      </Label>
+                      <Textarea
+                        id="prescription-comment"
+                        placeholder="Add notes or instructions for the patient..."
+                        value={prescriptionComment}
+                        onChange={(e) => setPrescriptionComment(e.target.value)}
+                        className="mt-1 text-sm min-h-[80px] resize-none"
+                      />
+                    </div>
                   </CardContent>
                 </Card>
               </div>
