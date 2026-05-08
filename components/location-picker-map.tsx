@@ -19,6 +19,7 @@ export default function LocationPickerMap({
 }: LocationPickerMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
+  const initializedRef = useRef(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [isLocating, setIsLocating] = useState(false)
   const [currentLocation, setCurrentLocation] = useState({ 
@@ -28,7 +29,8 @@ export default function LocationPickerMap({
 
   useEffect(() => {
     const initMap = async () => {
-      if (typeof window === "undefined" || !mapContainerRef.current || mapRef.current) return
+      if (typeof window === "undefined" || !mapContainerRef.current) return
+      if (initializedRef.current) return
 
       const L = (await import("leaflet")).default
       await import("leaflet/dist/leaflet.css")
@@ -59,6 +61,7 @@ export default function LocationPickerMap({
       })
 
       mapRef.current = map
+      initializedRef.current = true
       setIsLoaded(true)
 
       // Try to get user's current location
@@ -90,6 +93,7 @@ export default function LocationPickerMap({
       if (mapRef.current) {
         mapRef.current.remove()
         mapRef.current = null
+        initializedRef.current = false
       }
     }
   }, [initialLat, initialLng, onLocationChange])
