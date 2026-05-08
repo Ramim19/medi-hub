@@ -658,46 +658,6 @@ export default function PatientsPage() {
                   </div>
                 </div>
 
-                {/* Full Width - Medical History (Single Column) */}
-                <Card>
-                  <CardHeader className="p-4 pb-2">
-                    <CardTitle className="flex items-center gap-2 text-sm">
-                      <FileText className="h-4 w-4 text-chart-3" />
-                      Medical History
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      Past visits, consultations, and procedures
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <div className="space-y-3">
-                      {selectedPatient.medicalHistory.map((record, i) => (
-                        <div key={i} className="relative border-l-2 border-border pl-4">
-                          <div className="absolute -left-1.5 top-0 h-3 w-3 rounded-full bg-primary" />
-                          <div className="flex items-start justify-between gap-4 rounded border border-border p-3 text-xs">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Badge variant="outline" className="text-xs">
-                                  {record.type}
-                                </Badge>
-                                <span className="text-muted-foreground flex items-center gap-1">
-                                  <Calendar className="h-3 w-3" />
-                                  {record.date}
-                                </span>
-                              </div>
-                              <p className="font-semibold">{record.provider} · {record.hospital}</p>
-                              <p className="text-muted-foreground mt-1">{record.notes}</p>
-                            </div>
-                            <Button variant="outline" size="sm" className="text-xs h-7 shrink-0">
-                              View Full Record
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
                 {/* Full Width - Prescription Upload */}
                 <Card>
                   <CardHeader className="p-4 pb-2">
@@ -741,6 +701,46 @@ export default function PatientsPage() {
                         onChange={(e) => setPrescriptionComment(e.target.value)}
                         className="mt-1 text-sm min-h-[80px] resize-none"
                       />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Full Width - Medical History (Single Column) */}
+                <Card>
+                  <CardHeader className="p-4 pb-2">
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <FileText className="h-4 w-4 text-chart-3" />
+                      Medical History
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      Past visits, consultations, and procedures
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <div className="space-y-3">
+                      {selectedPatient.medicalHistory.map((record, i) => (
+                        <div key={i} className="relative border-l-2 border-border pl-4">
+                          <div className="absolute -left-1.5 top-0 h-3 w-3 rounded-full bg-primary" />
+                          <div className="flex items-start justify-between gap-4 rounded border border-border p-3 text-xs">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge variant="outline" className="text-xs">
+                                  {record.type}
+                                </Badge>
+                                <span className="text-muted-foreground flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  {record.date}
+                                </span>
+                              </div>
+                              <p className="font-semibold">{record.provider} · {record.hospital}</p>
+                              <p className="text-muted-foreground mt-1">{record.notes}</p>
+                            </div>
+                            <Button variant="outline" size="sm" className="text-xs h-7 shrink-0">
+                              View Full Record
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
