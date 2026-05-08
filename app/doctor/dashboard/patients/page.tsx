@@ -654,83 +654,82 @@ export default function PatientsPage() {
                       </Card>
                     )}
                   </div>
+                </div>
 
-                  {/* Full Width - Medical History */}
-                  <Card className="md:col-span-2">
-                    <CardHeader className="py-2 px-4">
-                      <CardTitle className="flex items-center gap-2 text-sm">
-                        <FileText className="h-4 w-4 text-chart-3" />
-                        Medical History
-                      </CardTitle>
-                      <CardDescription className="text-xs">
-                        Past visits, consultations, and procedures
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="px-4 pb-3 pt-0">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {selectedPatient.medicalHistory.map((record, i) => (
-                          <div key={i} className="relative border-l-2 border-border pl-4">
-                            <div className="absolute -left-1.5 top-0 h-3 w-3 rounded-full bg-primary" />
-                            <div className="rounded border border-border p-2.5 text-xs">
-                              <div className="flex items-start justify-between gap-2">
-                                <div>
-                                  <Badge variant="outline" className="text-xs mb-1">
-                                    {record.type}
-                                  </Badge>
-                                  <p className="font-semibold">{record.provider}</p>
-                                  <p className="text-muted-foreground">{record.hospital}</p>
-                                </div>
-                                <div className="flex items-center gap-1 text-muted-foreground whitespace-nowrap">
+                {/* Full Width - Medical History (Single Column) */}
+                <Card>
+                  <CardHeader className="p-4 pb-2">
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <FileText className="h-4 w-4 text-chart-3" />
+                      Medical History
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      Past visits, consultations, and procedures
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <div className="space-y-3">
+                      {selectedPatient.medicalHistory.map((record, i) => (
+                        <div key={i} className="relative border-l-2 border-border pl-4">
+                          <div className="absolute -left-1.5 top-0 h-3 w-3 rounded-full bg-primary" />
+                          <div className="flex items-start justify-between gap-4 rounded border border-border p-3 text-xs">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge variant="outline" className="text-xs">
+                                  {record.type}
+                                </Badge>
+                                <span className="text-muted-foreground flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
                                   {record.date}
-                                </div>
+                                </span>
                               </div>
-                              <p className="mt-2 text-muted-foreground">{record.notes}</p>
-                              <Button variant="link" className="mt-1 h-auto p-0 text-xs text-primary">
-                                View Full Record
-                              </Button>
+                              <p className="font-semibold">{record.provider} · {record.hospital}</p>
+                              <p className="text-muted-foreground mt-1">{record.notes}</p>
                             </div>
+                            <Button variant="outline" size="sm" className="text-xs h-7 shrink-0">
+                              View Full Record
+                            </Button>
                           </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
 
-                  {/* Full Width - Prescription Upload */}
-                  <Card className="md:col-span-2">
-                    <CardHeader className="py-2 px-4">
-                      <CardTitle className="flex items-center gap-2 text-sm">
-                        <Upload className="h-4 w-4 text-primary" />
-                        Add Prescription
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-4 pb-3 pt-0">
-                      <div className="flex items-center gap-3">
-                        <Input
-                          id="prescription-file"
-                          type="file"
-                          onChange={(e) => setPrescriptionFile(e.target.files?.[0] || null)}
-                          className="flex-1 text-xs h-8"
-                        />
-                        {prescriptionFile && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => setPrescriptionFile(null)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
+                {/* Full Width - Prescription Upload */}
+                <Card>
+                  <CardHeader className="p-4 pb-2">
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <Upload className="h-4 w-4 text-primary" />
+                      Add Prescription
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <div className="flex items-center gap-3">
+                      <Input
+                        id="prescription-file"
+                        type="file"
+                        onChange={(e) => setPrescriptionFile(e.target.files?.[0] || null)}
+                        className="flex-1 text-xs h-8"
+                      />
                       {prescriptionFile && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Selected: {prescriptionFile.name}
-                        </p>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => setPrescriptionFile(null)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       )}
-                    </CardContent>
-                  </Card>
-                </div>
+                    </div>
+                    {prescriptionFile && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Selected: {prescriptionFile.name}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
             </ScrollArea>
           )}
