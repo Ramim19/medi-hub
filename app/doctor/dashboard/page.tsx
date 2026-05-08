@@ -70,10 +70,12 @@ import {
 const LocationPickerMap = dynamic(() => import("@/components/location-picker-map"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-48 rounded-lg border border-border bg-muted flex items-center justify-center">
-      <div className="flex flex-col items-center gap-2">
-        <div className="h-6 w-6 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        <span className="text-sm text-muted-foreground">Loading map...</span>
+    <div className="flex justify-center w-full">
+      <div className="w-full max-w-md aspect-[4/3] rounded-xl border border-border bg-muted flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <div className="h-6 w-6 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <span className="text-sm text-muted-foreground">Loading map...</span>
+        </div>
       </div>
     </div>
   ),
@@ -681,11 +683,12 @@ export default function DoctorDashboardPage() {
             </div>
             <div className="space-y-2">
               <Label>Location on Map</Label>
-              <LocationPickerMap
-                onLocationChange={handleLocationChange}
-                initialLat={editLocation.lat}
-                initialLng={editLocation.lng}
-              />
+<LocationPickerMap
+                          onLocationChange={handleLocationChange}
+                          initialLat={editLocation.lat}
+                          initialLng={editLocation.lng}
+                          interactive={true}
+                        />
               <p className="text-xs text-muted-foreground">
                 Move the map to position the pin at your chamber location
               </p>

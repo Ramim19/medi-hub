@@ -10,12 +10,14 @@ interface LocationPickerMapProps {
   onLocationChange?: (lat: number, lng: number) => void
   initialLat?: number
   initialLng?: number
+  interactive?: boolean
 }
 
 export default function LocationPickerMap({
   onLocationChange,
   initialLat,
   initialLng,
+  interactive = false,
 }: LocationPickerMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
@@ -39,12 +41,19 @@ export default function LocationPickerMap({
       let startLat = initialLat ?? DHAKA_CENTER.lat
       let startLng = initialLng ?? DHAKA_CENTER.lng
 
-      // Create map
+      // Create map with conditional interaction settings
       const map = L.map(mapContainerRef.current, {
         center: [startLat, startLng],
         zoom: DEFAULT_ZOOM,
         zoomControl: true,
         attributionControl: true,
+        // Disable dragging/panning when not interactive
+        dragging: interactive,
+        touchZoom: interactive,
+        scrollWheelZoom: interactive,
+        doubleClickZoom: true,
+        boxZoom: interactive,
+        keyboard: interactive,
       })
 
       // Add OpenStreetMap tiles
@@ -53,19 +62,21 @@ export default function LocationPickerMap({
         maxZoom: 19,
       }).addTo(map)
 
-      // Update location when map moves
-      map.on("moveend", () => {
-        const center = map.getCenter()
-        setCurrentLocation({ lat: center.lat, lng: center.lng })
-        onLocationChange?.(center.lat, center.lng)
-      })
+      // Update location when map moves (only relevant in interactive mode)
+      if (interactive) {
+        map.on("moveend", () => {
+          const center = map.getCenter()
+          setCurrentLocation({ lat: center.lat, lng: center.lng })
+          onLocationChange?.(center.lat, center.lng)
+        })
+      }
 
       mapRef.current = map
       initializedRef.current = true
       setIsLoaded(true)
 
-      // Try to get user's current location
-      if (!initialLat && !initialLng && navigator.geolocation) {
+      // Try to get user's current location (only in interactive mode without initial coords)
+      if (interactive && !initialLat && !initialLng && navigator.geolocation) {
         setIsLocating(true)
         navigator.geolocation.getCurrentPosition(
           (position) => {
@@ -82,7 +93,7 @@ export default function LocationPickerMap({
           },
           { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         )
-      } else {
+      } else if (interactive) {
         onLocationChange?.(startLat, startLng)
       }
     }
@@ -96,51 +107,53 @@ export default function LocationPickerMap({
         initializedRef.current = false
       }
     }
-  }, [initialLat, initialLng, onLocationChange])
+  }, [initialLat, initialLng, onLocationChange, interactive])
 
   return (
-    <div className="relative w-full h-64 rounded-lg border border-border overflow-hidden">
-      {/* Map container */}
-      <div ref={mapContainerRef} className="w-full h-full z-0" />
+    <div className="flex justify-center w-full">
+      <div className="relative w-full max-w-md aspect-[4/3] rounded-xl border border-border overflow-hidden shadow-sm bg-muted">
+        {/* Map container */}
+        <div ref={mapContainerRef} className="w-full h-full z-0" />
 
-      {/* Fixed center pin overlay */}
-      <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
-        <div className="relative flex flex-col items-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img 
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-PqwAEuUmCChcy4fkF45zpJVDhXTOXI.png"
-            alt="Location pin"
-            width={40}
-            height={48}
-            className="drop-shadow-lg"
-            style={{ transform: "translateY(-24px)" }}
-          />
-          {/* Ground shadow */}
-          <div 
-            className="absolute w-3 h-1.5 bg-black/20 rounded-full blur-[1px]"
-            style={{ bottom: "24px" }}
-          />
-        </div>
-      </div>
-
-      {/* Loading overlay */}
-      {(!isLoaded || isLocating) && (
-        <div className="absolute inset-0 bg-muted flex items-center justify-center z-20">
-          <div className="flex flex-col items-center gap-2">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            <span className="text-sm text-muted-foreground">
-              {isLocating ? "Getting your location..." : "Loading map..."}
-            </span>
+        {/* Fixed center pin overlay */}
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
+          <div className="relative flex flex-col items-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img 
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-PqwAEuUmCChcy4fkF45zpJVDhXTOXI.png"
+              alt="Location pin"
+              width={40}
+              height={48}
+              className="drop-shadow-lg"
+              style={{ transform: "translateY(-24px)" }}
+            />
+            {/* Ground shadow */}
+            <div 
+              className="absolute w-3 h-1.5 bg-black/20 rounded-full blur-[1px]"
+              style={{ bottom: "24px" }}
+            />
           </div>
         </div>
-      )}
 
-      {/* Coordinates display */}
-      {isLoaded && !isLocating && (
-        <div className="absolute bottom-2 left-2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-xs text-muted-foreground z-10">
-          {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}
-        </div>
-      )}
+        {/* Loading overlay */}
+        {(!isLoaded || isLocating) && (
+          <div className="absolute inset-0 bg-muted flex items-center justify-center z-20">
+            <div className="flex flex-col items-center gap-2">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              <span className="text-sm text-muted-foreground">
+                {isLocating ? "Getting your location..." : "Loading map..."}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Coordinates display */}
+        {isLoaded && !isLocating && (
+          <div className="absolute bottom-3 left-3 bg-background/90 backdrop-blur-sm px-2.5 py-1.5 rounded-lg text-xs text-muted-foreground z-10 shadow-sm">
+            {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
