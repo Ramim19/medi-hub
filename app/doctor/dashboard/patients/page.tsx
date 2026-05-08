@@ -85,6 +85,8 @@ const mockPatients = [
     medicalHistory: [
       { date: "Apr 15, 2026", type: "Consultation", provider: "Dr. Sarah Ahmed", hospital: "Square Hospital", notes: "Routine diabetes checkup. HbA1c levels stable at 6.8%." },
       { date: "Mar 28, 2026", type: "Lab Test", provider: "Labaid Diagnostics", hospital: "Labaid Hospital", notes: "Complete blood count, lipid profile. All values within normal range." },
+      { date: "Feb 10, 2026", type: "Emergency Visit", provider: "Dr. Karim", hospital: "United Hospital", notes: "Acute gastritis. Treated and discharged same day." },
+      { date: "Jan 5, 2026", type: "Consultation", provider: "Dr. Sarah Ahmed", hospital: "Square Hospital", notes: "Annual physical examination. Blood pressure well controlled." },
     ],
   },
   {
@@ -110,6 +112,8 @@ const mockPatients = [
     ],
     medicalHistory: [
       { date: "Apr 20, 2026", type: "Consultation", provider: "Dr. Fatima", hospital: "United Hospital", notes: "Seasonal allergy follow-up. Prescribed antihistamines." },
+      { date: "Mar 15, 2026", type: "Lab Test", provider: "Labaid Diagnostics", hospital: "Labaid Hospital", notes: "Allergy panel test. Dust mite sensitivity confirmed." },
+      { date: "Feb 1, 2026", type: "Consultation", provider: "Dr. Fatima", hospital: "United Hospital", notes: "Initial consultation for recurring sneezing and congestion." },
     ],
   },
   {
@@ -140,6 +144,9 @@ const mockPatients = [
     ],
     medicalHistory: [
       { date: "Apr 10, 2026", type: "Lab Test", provider: "Popular Diagnostics", hospital: "Popular Hospital", notes: "Lipid profile test. LDL cholesterol improved from 180 to 140." },
+      { date: "Mar 5, 2026", type: "Consultation", provider: "Dr. Rahman", hospital: "Square Hospital", notes: "Follow-up for cholesterol management. Medication adjusted." },
+      { date: "Jan 20, 2026", type: "Lab Test", provider: "Popular Diagnostics", hospital: "Popular Hospital", notes: "Fasting blood glucose test. HbA1c at 6.2%, pre-diabetic range." },
+      { date: "Nov 15, 2025", type: "Emergency Visit", provider: "Dr. Hassan", hospital: "United Hospital", notes: "Chest discomfort. ECG normal. Advised lifestyle changes." },
     ],
   },
 ]
@@ -680,23 +687,33 @@ export default function PatientsPage() {
                       <FileText className="h-4 w-4 text-chart-3" />
                       Medical History
                     </CardTitle>
+                    <CardDescription>
+                      Past visits, consultations, and procedures
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {selectedPatient.medicalHistory.map((record, i) => (
-                        <div key={i} className="relative border-l-2 border-border pl-4 pb-3">
-                          <div className="absolute -left-[5px] top-0 h-2 w-2 rounded-full bg-primary" />
-                          <div className="text-sm">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge variant="outline" className="text-xs">
-                                {record.type}
-                              </Badge>
-                              <span className="text-muted-foreground">{record.date}</span>
+                        <div key={i} className="relative border-l-2 border-border pl-6 pb-4 last:pb-0">
+                          <div className="absolute -left-2 top-0 h-4 w-4 rounded-full bg-primary" />
+                          <div className="rounded-lg border border-border bg-card p-4">
+                            <div className="flex flex-wrap items-start justify-between gap-2">
+                              <div>
+                                <Badge variant="outline" className="mb-2">
+                                  {record.type}
+                                </Badge>
+                                <h4 className="font-semibold">{record.provider}</h4>
+                                <p className="text-sm text-muted-foreground">{record.hospital}</p>
+                              </div>
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <Calendar className="h-3 w-3" />
+                                {record.date}
+                              </div>
                             </div>
-                            <p className="font-medium">
-                              {record.provider} · {record.hospital}
-                            </p>
-                            <p className="text-muted-foreground">{record.notes}</p>
+                            <p className="mt-3 text-sm">{record.notes}</p>
+                            <Button variant="link" className="mt-2 h-auto p-0 text-primary">
+                              View Full Record
+                            </Button>
                           </div>
                         </div>
                       ))}
