@@ -398,7 +398,7 @@ export default function PatientsPage() {
 
       {/* Patient Profile Modal */}
       <Dialog open={patientModalOpen} onOpenChange={setPatientModalOpen}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <User className="h-5 w-5 text-primary" />
@@ -410,7 +410,7 @@ export default function PatientsPage() {
           </DialogHeader>
 
           {selectedPatient && (
-            <ScrollArea className="flex-1 h-[calc(90vh-180px)] pr-4 [&>div>div]:!block [&_[data-radix-scroll-area-scrollbar]]:flex">
+            <ScrollArea className="flex-1 pr-4">
               <div className="space-y-4">
                 {/* Patient Header */}
                 <div className="flex items-start gap-3">
