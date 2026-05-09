@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Upload, User, Briefcase, FileCheck, KeyRound, AlertCircle } from "lucide-react"
+import { Upload, User, Briefcase, FileCheck, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const DEPARTMENTS = [
@@ -57,6 +57,7 @@ export default function NurseRegistrationPage() {
     affiliatedHospital: "",
     // Account Information
     password: "",
+    confirmPassword: "",
   })
 
   const [files, setFiles] = useState({
@@ -140,6 +141,11 @@ export default function NurseRegistrationPage() {
       newErrors.password = "Password is required"
     } else if (formData.password.length < 6) {
       newErrors.password = "Password must be at least 6 characters"
+    }
+    if (!formData.confirmPassword.trim()) {
+      newErrors.confirmPassword = "Please confirm your password"
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match"
     }
     if (!formData.address.trim()) newErrors.address = "Address is required"
     if (!formData.nursingRegNumber.trim()) newErrors.nursingRegNumber = "Nursing registration number is required"
@@ -275,6 +281,38 @@ export default function NurseRegistrationPage() {
                     />
                     {errors.email && (
                       <p className="text-xs text-destructive">{errors.email}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password *</Label>
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      placeholder="Create a password (min 6 characters)"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className={errors.password ? "border-destructive" : ""}
+                    />
+                    {errors.password && (
+                      <p className="text-xs text-destructive">{errors.password}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                    <Input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      placeholder="Confirm your password"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      className={errors.confirmPassword ? "border-destructive" : ""}
+                    />
+                    {errors.confirmPassword && (
+                      <p className="text-xs text-destructive">{errors.confirmPassword}</p>
                     )}
                   </div>
 
@@ -526,44 +564,6 @@ export default function NurseRegistrationPage() {
                       <Upload className="mr-2 h-4 w-4" />
                       {files.hospitalIdCard ? files.hospitalIdCard.name : "Upload Hospital ID Card"}
                     </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Account Information Section */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 pb-2 border-b border-border">
-                  <KeyRound className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold text-lg">Account Information</h3>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="accountEmail">Email</Label>
-                    <Input
-                      id="accountEmail"
-                      type="email"
-                      value={formData.email}
-                      disabled
-                      className="bg-muted"
-                    />
-                    <p className="text-xs text-muted-foreground">Uses email from personal information</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password *</Label>
-                    <Input
-                      id="password"
-                      name="password"
-                      type="password"
-                      placeholder="Create a password (min 6 characters)"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      className={errors.password ? "border-destructive" : ""}
-                    />
-                    {errors.password && (
-                      <p className="text-xs text-destructive">{errors.password}</p>
-                    )}
                   </div>
                 </div>
               </div>
