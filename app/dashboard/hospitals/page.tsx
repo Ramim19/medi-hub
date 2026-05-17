@@ -49,6 +49,36 @@ export default function HospitalsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [sortBy, setSortBy] = useState("distance")
   const [view, setView] = useState<"map" | "list">("map")
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
+
+  // Get user's location on mount
+  React.useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          })
+        },
+        () => {
+          // Default to Dhaka center if location denied
+          setUserLocation({ lat: 23.7808, lng: 90.4094 })
+        }
+      )
+    }
+  }, [])
+
+  const handleGetDirections = () => {
+    if (!selectedHospital || !userLocation) {
+      alert("Location or hospital information not available")
+      return
+    }
+
+    // Create Google Maps directions URL
+    const mapsUrl = `https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/${selectedHospital.lat},${selectedHospital.lng}`
+    window.open(mapsUrl, "_blank")
+  }
 
   const filteredHospitals = sampleHospitals
     .filter(
@@ -252,7 +282,7 @@ export default function HospitalsPage() {
                       Book Appointment
                     </a>
                   </Button> */}
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full" onClick={handleGetDirections}>
                     <ExternalLink className="mr-2 h-4 w-4" />
                     Get Directions
                   </Button>
