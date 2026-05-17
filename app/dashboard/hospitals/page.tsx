@@ -246,12 +246,12 @@ export default function HospitalsPage() {
 
                 {/* Actions */}
                 <div className="space-y-2">
-                  <Button className="w-full" asChild>
+                  {/* <Button className="w-full" asChild>
                     <a href={`/dashboard/appointments?hospital=${selectedHospital.id}`}>
                       <Calendar className="mr-2 h-4 w-4" />
                       Book Appointment
                     </a>
-                  </Button>
+                  </Button> */}
                   <Button variant="outline" className="w-full">
                     <ExternalLink className="mr-2 h-4 w-4" />
                     Get Directions
