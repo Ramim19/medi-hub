@@ -209,7 +209,7 @@ export default function HospitalsPage() {
                 </div>
 
                 {/* Wait Time */}
-                <div className="rounded-lg border border-border p-4">
+                {/* <div className="rounded-lg border border-border p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Clock className="h-5 w-5 text-chart-3" />
@@ -217,7 +217,7 @@ export default function HospitalsPage() {
                     </div>
                     <span className="text-xl font-bold">{selectedHospital.waitTime}</span>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Contact */}
                 <div>
