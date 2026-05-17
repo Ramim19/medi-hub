@@ -344,7 +344,7 @@ export function HospitalList({
               </Badge>
             </div>
           </div>
-          <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4">
+          <div className="mt-4 grid grid-cols-2 gap-2 border-t border-border pt-4">
             <div className="text-center">
               <div className="flex items-center justify-center gap-1">
                 <Users
