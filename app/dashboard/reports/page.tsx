@@ -45,7 +45,25 @@ import {
 
 const demoReportImage = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/312437349_619671059942455_965027182600412432_n-08Az34O7fyakzXi3xpGA653o67slpm.jpg"
 
-const testReports = [
+type Report = {
+  id: number
+  name: string
+  date: string
+  lab: string
+  status: "ready" | "processing"
+  category: string
+  doctor: string
+  results: Array<{
+    parameter: string
+    value: string
+    unit: string
+    range: string
+    status: "normal" | "high" | "low"
+  }>
+  fileUrl: string | null
+}
+
+const testReports: Report[] = [
   {
     id: 1,
     name: "Complete Blood Count (CBC)",
@@ -140,7 +158,7 @@ const testReports = [
 export default function ReportsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [filterCategory, setFilterCategory] = useState<string>("all")
-  const [selectedReport, setSelectedReport] = useState<typeof testReports[0] | null>(null)
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null)
   const [isViewOpen, setIsViewOpen] = useState(false)
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [allReports, setAllReports] = useState(testReports)
@@ -160,7 +178,7 @@ export default function ReportsPage() {
   const readyReports = allReports.filter((r) => r.status === "ready")
   const processingReports = allReports.filter((r) => r.status === "processing")
 
-  const handleViewReport = (report: typeof testReports[0]) => {
+  const handleViewReport = (report: Report) => {
     setSelectedReport(report)
     setIsViewOpen(true)
   }
@@ -379,8 +397,8 @@ export default function ReportsPage() {
           </DialogHeader>
           <ScrollArea className="flex-1 pr-4">
             <div className="space-y-6 py-4">
-              {/* File Viewer */}
-              {selectedReport?.fileUrl ? (
+              {/* File Viewer - Show image if fileUrl exists */}
+              {selectedReport && selectedReport.fileUrl && selectedReport.fileUrl.length > 0 ? (
                 <div className="space-y-4">
                   <div className="rounded-lg border border-muted bg-muted/30 p-4">
                     {selectedReport.fileUrl.startsWith("data:application/pdf") ? (
