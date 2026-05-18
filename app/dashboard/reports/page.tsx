@@ -507,20 +507,7 @@ export default function ReportsPage() {
               )}
             </div>
           </ScrollArea>
-          <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline">
-              <Printer className="mr-2 h-4 w-4" />
-              Print
-            </Button>
-            <Button variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              Download PDF
-            </Button>
-            <Button>
-              <Share2 className="mr-2 h-4 w-4" />
-              Share with Doctor
-            </Button>
-          </div>
+
         </DialogContent>
       </Dialog>
 
