@@ -33,6 +33,7 @@ import {
   X,
   Pencil,
   Check,
+  UploadCloud,
 } from "lucide-react"
 
 const initialPatientData = {
@@ -58,7 +59,7 @@ const initialAllergies = [
   { name: "Dust mites", severity: "mild", reaction: "Sneezing, congestion" },
 ]
 
-const medicalHistory = [
+const initialMedicalHistory = [
   {
     date: "Apr 15, 2026",
     type: "Consultation",
@@ -110,7 +111,33 @@ const getCategoryBadgeClass = (category: string) => {
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("overview")
-  const [viewingRecord, setViewingRecord] = useState<typeof medicalHistory[0] | null>(null)
+  const [historyList, setHistoryList] = useState(initialMedicalHistory)
+  const [viewingRecord, setViewingRecord] = useState<typeof historyList[0] | null>(null)
+  
+  // Add History State
+  const [isAddingHistory, setIsAddingHistory] = useState(false)
+  const [newHistory, setNewHistory] = useState({
+    type: "",
+    provider: "",
+    hospital: "",
+    notes: "",
+    file: "",
+  })
+
+  const handleAddHistory = (e: React.FormEvent) => {
+    e.preventDefault()
+    const record = {
+      date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      type: newHistory.type,
+      provider: newHistory.provider,
+      hospital: newHistory.hospital,
+      notes: newHistory.notes,
+      file: newHistory.file || "/demo-medical-record.png", // Demo fallback
+    }
+    setHistoryList([record, ...historyList])
+    setIsAddingHistory(false)
+    setNewHistory({ type: "", provider: "", hospital: "", notes: "", file: "" })
+  }
 
   // Personal Info state
   const [patient, setPatient] = useState(initialPatientData)
@@ -471,14 +498,15 @@ export default function ProfilePage() {
                 </CardTitle>
                 <CardDescription className="mt-1.5">Your past visits, consultations, and procedures</CardDescription>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
-                <Pencil className="h-4 w-4" />
+              <Button variant="outline" size="sm" onClick={() => setIsAddingHistory(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Record
               </Button>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[500px] pr-4">
                 <div className="space-y-4">
-                  {medicalHistory.map((record, index) => (
+                  {historyList.map((record, index) => (
                     <div key={index} className="relative border-l-2 border-border pl-6 pb-6">
                       <div className="absolute -left-2 top-0 h-4 w-4 rounded-full bg-primary" />
                       <div className="rounded-lg border border-border bg-card p-4">
@@ -538,6 +566,79 @@ export default function ProfilePage() {
                   />
                 )}
               </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Add History Dialog */}
+          <Dialog open={isAddingHistory} onOpenChange={setIsAddingHistory}>
+            <DialogContent className="max-w-xl">
+              <DialogHeader>
+                <DialogTitle>Add Medical Record</DialogTitle>
+                <DialogDescription>
+                  Enter the details of your recent medical visit or procedure.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleAddHistory} className="space-y-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Type of Visit</Label>
+                    <Select value={newHistory.type} onValueChange={(val) => setNewHistory({ ...newHistory, type: val })} required>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Consultation">Consultation</SelectItem>
+                        <SelectItem value="Lab Test">Lab Test</SelectItem>
+                        <SelectItem value="Emergency Visit">Emergency Visit</SelectItem>
+                        <SelectItem value="Follow-up">Follow-up</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Provider / Doctor</Label>
+                    <Input placeholder="e.g. Dr. Sarah Ahmed" value={newHistory.provider} onChange={(e) => setNewHistory({ ...newHistory, provider: e.target.value })} required />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Hospital / Clinic</Label>
+                  <Input placeholder="e.g. Square Hospital" value={newHistory.hospital} onChange={(e) => setNewHistory({ ...newHistory, hospital: e.target.value })} required />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Notes / Summary</Label>
+                  <Textarea 
+                    placeholder="Brief details about the visit..." 
+                    className="resize-none" 
+                    value={newHistory.notes} 
+                    onChange={(e) => setNewHistory({ ...newHistory, notes: e.target.value })} 
+                    required 
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Attach Document (PDF/Image)</Label>
+                  <div 
+                    className="border-2 border-dashed border-border rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => setNewHistory({ ...newHistory, file: "/demo-medical-record.png" })}
+                  >
+                    <UploadCloud className="h-8 w-8 text-muted-foreground mb-2" />
+                    {newHistory.file ? (
+                      <p className="text-sm font-medium text-primary">demo-medical-record.png attached!</p>
+                    ) : (
+                      <>
+                        <p className="text-sm font-medium text-foreground">Click to upload or drag and drop</p>
+                        <p className="text-xs text-muted-foreground mt-1">SVG, PNG, JPG or PDF (max. 5MB)</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <Button type="button" variant="ghost" onClick={() => setIsAddingHistory(false)}>Cancel</Button>
+                  <Button type="submit">Save Record</Button>
+                </div>
+              </form>
             </DialogContent>
           </Dialog>
         </TabsContent>
