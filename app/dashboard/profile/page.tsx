@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   User,
   FileText,
@@ -31,9 +32,10 @@ import {
   Eye,
   X,
   Pencil,
+  Check,
 } from "lucide-react"
 
-const patientData = {
+const initialPatientData = {
   name: "John Doe",
   age: 35,
   gender: "Male",
@@ -50,7 +52,7 @@ const patientData = {
   medihubId: "MH-2024-001234",
 }
 
-const allergies = [
+const initialAllergies = [
   { name: "Penicillin", severity: "severe", reaction: "Anaphylaxis" },
   { name: "Shellfish", severity: "moderate", reaction: "Hives, swelling" },
   { name: "Dust mites", severity: "mild", reaction: "Sneezing, congestion" },
@@ -109,6 +111,43 @@ const getCategoryBadgeClass = (category: string) => {
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("overview")
   const [viewingRecord, setViewingRecord] = useState<typeof medicalHistory[0] | null>(null)
+
+  // Personal Info state
+  const [patient, setPatient] = useState(initialPatientData)
+  const [editingPersonal, setEditingPersonal] = useState(false)
+  const [editPatient, setEditPatient] = useState(initialPatientData)
+
+  const handleSavePersonal = () => {
+    setPatient(editPatient)
+    setEditingPersonal(false)
+  }
+  const handleCancelPersonal = () => {
+    setEditPatient(patient)
+    setEditingPersonal(false)
+  }
+
+  // Allergies state
+  const [allergyList, setAllergyList] = useState(initialAllergies)
+  const [editingAllergies, setEditingAllergies] = useState(false)
+  const [editAllergyList, setEditAllergyList] = useState(initialAllergies)
+
+  const handleSaveAllergies = () => {
+    setAllergyList(editAllergyList.filter(a => a.name.trim()))
+    setEditingAllergies(false)
+  }
+  const handleCancelAllergies = () => {
+    setEditAllergyList(allergyList)
+    setEditingAllergies(false)
+  }
+  const handleAddAllergy = () => {
+    setEditAllergyList([...editAllergyList, { name: "", severity: "mild", reaction: "" }])
+  }
+  const handleRemoveAllergy = (index: number) => {
+    setEditAllergyList(editAllergyList.filter((_, i) => i !== index))
+  }
+  const updateAllergy = (index: number, field: string, value: string) => {
+    setEditAllergyList(editAllergyList.map((a, i) => i === index ? { ...a, [field]: value } : a))
+  }
   const [notes, setNotes] = useState<
     { id: number; title: string; content: string; category: string; date: string; author: string }[]
   >([
@@ -161,25 +200,25 @@ export default function ProfilePage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="flex items-start gap-4">
           <Avatar className="h-20 w-20 border-4 border-card shadow-lg">
-            <AvatarImage src="/placeholder-avatar.jpg" alt={patientData.name} />
+            <AvatarImage src="/placeholder-avatar.jpg" alt={patient.name} />
             <AvatarFallback className="bg-primary text-2xl text-primary-foreground">
               JD
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-2xl font-bold text-foreground lg:text-3xl">{patientData.name}</h1>
+            <h1 className="text-2xl font-bold text-foreground lg:text-3xl">{patient.name}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-muted-foreground">
-              <span>{patientData.age} years old</span>
+              <span>{patient.age} years old</span>
               <span>·</span>
-              <span>{patientData.gender}</span>
+              <span>{patient.gender}</span>
               <span>·</span>
               <Badge variant="outline" className="bg-red-50 text-red-700">
                 <Droplet className="mr-1 h-3 w-3" />
-                {patientData.bloodType}
+                {patient.bloodType}
               </Badge>
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
-              MediHub ID: <span className="font-mono font-semibold">{patientData.medihubId}</span>
+              MediHub ID: <span className="font-mono font-semibold">{patient.medihubId}</span>
             </p>
           </div>
         </div>
@@ -226,35 +265,79 @@ export default function ProfilePage() {
                   <User className="h-5 w-5 text-primary" />
                   Personal Information
                 </CardTitle>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
-                  <Pencil className="h-4 w-4" />
-                </Button>
+                {editingPersonal ? (
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={handleCancelPersonal}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" onClick={handleSavePersonal}>
+                      <Check className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => { setEditPatient(patient); setEditingPersonal(true) }}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>{patientData.phone}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>{patientData.email}</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                  <span>{patientData.address}</span>
-                </div>
-                <Separator />
-                <div>
-                  <p className="mb-1 text-sm text-muted-foreground">Emergency Contact</p>
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-destructive" />
-                    <span className="font-medium">{patientData.emergencyContact.name}</span>
-                    <Badge variant="outline" className="text-xs">
-                      {patientData.emergencyContact.relation}
-                    </Badge>
+                {editingPersonal ? (
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Phone</Label>
+                      <Input value={editPatient.phone} onChange={(e) => setEditPatient({ ...editPatient, phone: e.target.value })} className="h-9" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Email</Label>
+                      <Input value={editPatient.email} onChange={(e) => setEditPatient({ ...editPatient, email: e.target.value })} className="h-9" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Address</Label>
+                      <Input value={editPatient.address} onChange={(e) => setEditPatient({ ...editPatient, address: e.target.value })} className="h-9" />
+                    </div>
+                    <Separator />
+                    <p className="text-xs font-medium text-muted-foreground">Emergency Contact</p>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Name</Label>
+                      <Input value={editPatient.emergencyContact.name} onChange={(e) => setEditPatient({ ...editPatient, emergencyContact: { ...editPatient.emergencyContact, name: e.target.value } })} className="h-9" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Relation</Label>
+                      <Input value={editPatient.emergencyContact.relation} onChange={(e) => setEditPatient({ ...editPatient, emergencyContact: { ...editPatient.emergencyContact, relation: e.target.value } })} className="h-9" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Phone</Label>
+                      <Input value={editPatient.emergencyContact.phone} onChange={(e) => setEditPatient({ ...editPatient, emergencyContact: { ...editPatient.emergencyContact, phone: e.target.value } })} className="h-9" />
+                    </div>
                   </div>
-                  <p className="mt-1 text-sm">{patientData.emergencyContact.phone}</p>
-                </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <span>{patient.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span>{patient.email}</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                      <span>{patient.address}</span>
+                    </div>
+                    <Separator />
+                    <div>
+                      <p className="mb-1 text-sm text-muted-foreground">Emergency Contact</p>
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-destructive" />
+                        <span className="font-medium">{patient.emergencyContact.name}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {patient.emergencyContact.relation}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 text-sm">{patient.emergencyContact.phone}</p>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 
@@ -265,48 +348,89 @@ export default function ProfilePage() {
                   <AlertTriangle className="h-5 w-5 text-destructive" />
                   Allergies & Alerts
                 </CardTitle>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
-                  <Pencil className="h-4 w-4" />
-                </Button>
+                {editingAllergies ? (
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={handleCancelAllergies}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" onClick={handleSaveAllergies}>
+                      <Check className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => { setEditAllergyList(allergyList); setEditingAllergies(true) }}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {allergies.map((allergy, index) => (
-                    <div
-                      key={index}
-                      className={`rounded-lg border p-4 ${
-                        allergy.severity === "severe"
-                          ? "border-red-200 bg-red-50"
-                          : allergy.severity === "moderate"
-                          ? "border-amber-200 bg-amber-50"
-                          : "border-gray-200 bg-gray-50"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold">{allergy.name}</span>
-                        <Badge
-                          variant={
-                            allergy.severity === "severe"
-                              ? "destructive"
-                              : allergy.severity === "moderate"
-                              ? "default"
-                              : "secondary"
-                          }
-                          className={
-                            allergy.severity === "moderate"
-                              ? "bg-amber-500"
-                              : allergy.severity === "mild"
-                              ? "bg-gray-500"
-                              : ""
-                          }
-                        >
-                          {allergy.severity}
-                        </Badge>
+                {editingAllergies ? (
+                  <div className="space-y-3">
+                    {editAllergyList.map((allergy, index) => (
+                      <div key={index} className="rounded-lg border border-border p-3 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <Input placeholder="Allergy name" value={allergy.name} onChange={(e) => updateAllergy(index, "name", e.target.value)} className="h-8 text-sm" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => handleRemoveAllergy(index)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                        <Select value={allergy.severity} onValueChange={(val) => updateAllergy(index, "severity", val)}>
+                          <SelectTrigger className="h-8 w-full text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="mild">Mild</SelectItem>
+                            <SelectItem value="moderate">Moderate</SelectItem>
+                            <SelectItem value="severe">Severe</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Textarea placeholder="Reaction details" value={allergy.reaction} onChange={(e) => updateAllergy(index, "reaction", e.target.value)} className="min-h-[60px] text-sm resize-none" />
                       </div>
-                      <p className="mt-1 text-sm text-muted-foreground">{allergy.reaction}</p>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                    <Button variant="outline" size="sm" className="w-full" onClick={handleAddAllergy}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Allergy
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {allergyList.map((allergy, index) => (
+                      <div
+                        key={index}
+                        className={`rounded-lg border p-4 ${
+                          allergy.severity === "severe"
+                            ? "border-red-200 bg-red-50"
+                            : allergy.severity === "moderate"
+                            ? "border-amber-200 bg-amber-50"
+                            : "border-gray-200 bg-gray-50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold">{allergy.name}</span>
+                          <Badge
+                            variant={
+                              allergy.severity === "severe"
+                                ? "destructive"
+                                : allergy.severity === "moderate"
+                                ? "default"
+                                : "secondary"
+                            }
+                            className={
+                              allergy.severity === "moderate"
+                                ? "bg-amber-500"
+                                : allergy.severity === "mild"
+                                ? "bg-gray-500"
+                                : ""
+                            }
+                          >
+                            {allergy.severity}
+                          </Badge>
+                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground">{allergy.reaction}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
