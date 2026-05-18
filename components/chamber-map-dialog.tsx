@@ -35,19 +35,24 @@ export default function ChamberMapDialog({ isOpen, onClose, doctor }: ChamberMap
   const mapInstanceRef = useRef<L.Map | null>(null)
 
   useEffect(() => {
-    if (!isOpen || !mapRef.current) return
-
-    // Clean up previous map instance
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.remove()
-      mapInstanceRef.current = null
+    if (!isOpen) {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove()
+        mapInstanceRef.current = null
+      }
+      return
     }
 
-    // Small delay to ensure dialog is fully rendered
-    const timer = setTimeout(() => {
-      if (!mapRef.current) return
+    let initTimer: NodeJS.Timeout
 
-      // Initialize map
+    const initMap = () => {
+      if (!mapRef.current) {
+        initTimer = setTimeout(initMap, 50)
+        return
+      }
+
+      if (mapInstanceRef.current) return // Already initialized
+
       const map = L.map(mapRef.current, {
         center: [doctor.chamberLocation.lat, doctor.chamberLocation.lng],
         zoom: 16,
@@ -57,12 +62,10 @@ export default function ChamberMapDialog({ isOpen, onClose, doctor }: ChamberMap
 
       mapInstanceRef.current = map
 
-      // Add OpenStreetMap tiles
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       }).addTo(map)
 
-      // Custom marker icon
       const chamberIcon = L.divIcon({
         className: "custom-marker",
         html: `
@@ -95,12 +98,10 @@ export default function ChamberMapDialog({ isOpen, onClose, doctor }: ChamberMap
         popupAnchor: [0, -40],
       })
 
-      // Add marker with popup
       const marker = L.marker([doctor.chamberLocation.lat, doctor.chamberLocation.lng], {
         icon: chamberIcon,
       }).addTo(map)
 
-      // Popup content
       marker.bindPopup(`
         <div style="min-width: 200px; padding: 4px;">
           <p style="font-weight: 600; font-size: 14px; margin: 0 0 4px 0; color: #1e293b;">
@@ -115,18 +116,17 @@ export default function ChamberMapDialog({ isOpen, onClose, doctor }: ChamberMap
         </div>
       `).openPopup()
 
-      // Force map to recalculate size
+      // Force map to recalculate size after dialog animation
       setTimeout(() => {
         map.invalidateSize()
-      }, 100)
-    }, 100)
+      }, 250)
+    }
+
+    // Start initialization loop
+    initMap()
 
     return () => {
-      clearTimeout(timer)
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove()
-        mapInstanceRef.current = null
-      }
+      clearTimeout(initTimer)
     }
   }, [isOpen, doctor])
 
