@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
@@ -11,6 +12,7 @@ import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import {
   User,
   FileText,
@@ -26,6 +28,9 @@ import {
   Users,
   Plus,
   Trash2,
+  Eye,
+  X,
+  Pencil,
 } from "lucide-react"
 
 const patientData = {
@@ -58,6 +63,7 @@ const medicalHistory = [
     provider: "Dr. Sarah Ahmed",
     hospital: "Square Hospital",
     notes: "Routine diabetes checkup. HbA1c levels stable at 6.8%.",
+    file: "/demo-medical-record.png",
   },
   {
     date: "Mar 28, 2026",
@@ -65,6 +71,7 @@ const medicalHistory = [
     provider: "Labaid Diagnostics",
     hospital: "Labaid Hospital",
     notes: "Complete blood count, lipid profile. All values within normal range.",
+    file: "/demo-medical-record.png",
   },
   {
     date: "Feb 10, 2026",
@@ -72,6 +79,7 @@ const medicalHistory = [
     provider: "Dr. Karim",
     hospital: "United Hospital",
     notes: "Acute gastritis. Treated and discharged same day.",
+    file: "/demo-medical-record.png",
   },
   {
     date: "Jan 5, 2026",
@@ -79,45 +87,72 @@ const medicalHistory = [
     provider: "Dr. Sarah Ahmed",
     hospital: "Square Hospital",
     notes: "Annual physical examination. Blood pressure well controlled.",
+    file: "/demo-medical-record.png",
   },
 ]
 
-const medicalNotes = [
-  { id: 1, name: "Blood Pressure", info: "120/80 mmHg" },
-  { id: 2, name: "Heart Rate", info: "72 bpm" },
-  { id: 3, name: "Temperature", info: "98.6°F" },
-  { id: 4, name: "Oxygen Saturation", info: "98%" },
-  { id: 5, name: "Height", info: "5'10\" (178 cm)" },
-  { id: 6, name: "Weight", info: "165 lbs (75 kg)" },
-  { id: 7, name: "BMI", info: "23.1" },
-]
 
-const lastNotesUpdated = "14-05-2026"
+
+const getCategoryBadgeClass = (category: string) => {
+  switch (category) {
+    case "Dietary":
+      return "bg-green-50 text-green-700 border-green-200"
+    case "Lifestyle":
+      return "bg-blue-50 text-blue-700 border-blue-200"
+    case "Prescription":
+      return "bg-purple-50 text-purple-700 border-purple-200"
+    default:
+      return "bg-gray-50 text-gray-700 border-gray-200"
+  }
+}
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("overview")
-  const [notes, setNotes] = useState(medicalNotes)
-  const [isEditingNotes, setIsEditingNotes] = useState(false)
-  const [editingNotes, setEditingNotes] = useState(medicalNotes)
+  const [viewingRecord, setViewingRecord] = useState<typeof medicalHistory[0] | null>(null)
+  const [notes, setNotes] = useState<
+    { id: number; title: string; content: string; category: string; date: string; author: string }[]
+  >([
+    {
+      id: 1,
+      title: "Morning Cardio Plan",
+      content: "30 minutes brisk walking followed by 10 minutes stretching. Keep heart rate between 100-120 bpm.",
+      category: "Lifestyle",
+      date: "May 14, 2026",
+      author: "Self",
+    },
+    {
+      id: 2,
+      title: "Dietary Adjustments",
+      content: "Reduce sodium intake to under 2300mg/day. Increase fiber-rich vegetables. Avoid processed foods.",
+      category: "Dietary",
+      date: "May 10, 2026",
+      author: "Dr. Sarah Ahmed",
+    },
+  ])
 
-  const handleSaveNotes = () => {
-    setNotes(editingNotes)
-    setIsEditingNotes(false)
+  const [newNoteTitle, setNewNoteTitle] = useState("")
+  const [newNoteContent, setNewNoteContent] = useState("")
+  const [newNoteCategory, setNewNoteCategory] = useState("General")
+
+  const handleAddNote = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newNoteTitle.trim() || !newNoteContent.trim()) return
+    const newNote = {
+      id: notes.length > 0 ? Math.max(...notes.map((n) => n.id)) + 1 : 1,
+      title: newNoteTitle,
+      content: newNoteContent,
+      category: newNoteCategory,
+      date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      author: "Self",
+    }
+    setNotes([newNote, ...notes])
+    setNewNoteTitle("")
+    setNewNoteContent("")
+    setNewNoteCategory("General")
   }
 
-  const updateNote = (id: number, field: "name" | "info", value: string) => {
-    setEditingNotes(editingNotes.map(note => 
-      note.id === id ? { ...note, [field]: value } : note
-    ))
-  }
-
-  const addNote = () => {
-    const newNote = { id: Math.max(...notes.map(n => n.id)) + 1, name: "", info: "" }
-    setEditingNotes([...editingNotes, newNote])
-  }
-
-  const deleteNote = (id: number) => {
-    setEditingNotes(editingNotes.filter(note => note.id !== id))
+  const handleDeleteNote = (id: number) => {
+    setNotes(notes.filter((note) => note.id !== id))
   }
 
   return (
@@ -177,23 +212,23 @@ export default function ProfilePage() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3 md:w-auto md:grid-cols-3">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="conditions">Conditions</TabsTrigger>
-          <TabsTrigger value="medications">Medications</TabsTrigger>
-          <TabsTrigger value="immunizations">Immunizations</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
           <TabsTrigger value="notes">Notes</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="mt-6 space-y-6">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2">
             {/* Personal Info */}
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <User className="h-5 w-5 text-primary" />
                   Personal Information
                 </CardTitle>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                  <Pencil className="h-4 w-4" />
+                </Button>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
@@ -222,91 +257,18 @@ export default function ProfilePage() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Vital Signs */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Activity className="h-5 w-5 text-secondary" />
-                  Vital Signs
-                </CardTitle>
-                <CardDescription>Last updated: {vitalSigns.lastUpdated}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Heart className="h-4 w-4 text-red-500" />
-                    <span className="text-sm">Blood Pressure</span>
-                  </div>
-                  <span className="font-semibold">{vitalSigns.bloodPressure} mmHg</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-pink-500" />
-                    <span className="text-sm">Heart Rate</span>
-                  </div>
-                  <span className="font-semibold">{vitalSigns.heartRate} bpm</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Thermometer className="h-4 w-4 text-orange-500" />
-                    <span className="text-sm">Temperature</span>
-                  </div>
-                  <span className="font-semibold">{vitalSigns.temperature}°F</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Droplet className="h-4 w-4 text-blue-500" />
-                    <span className="text-sm">Oxygen Saturation</span>
-                  </div>
-                  <span className="font-semibold">{vitalSigns.oxygenSaturation}%</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Body Metrics */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Scale className="h-5 w-5 text-chart-3" />
-                  Body Metrics
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Ruler className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Height</span>
-                  </div>
-                  <span className="font-semibold">{patientData.height}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Scale className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Weight</span>
-                  </div>
-                  <span className="font-semibold">{patientData.weight}</span>
-                </div>
-                <Separator />
-                <div>
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-sm">BMI</span>
-                    <span className="font-semibold">{patientData.bmi}</span>
-                  </div>
-                  <Progress value={(patientData.bmi / 30) * 100} className="h-2" />
-                  <p className="mt-1 text-xs text-muted-foreground">Normal range: 18.5 - 24.9</p>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
             {/* Allergies */}
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <AlertTriangle className="h-5 w-5 text-destructive" />
                 Allergies & Alerts
               </CardTitle>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                <Pencil className="h-4 w-4" />
+              </Button>
             </CardHeader>
             <CardContent>
               <div className="grid gap-3 md:grid-cols-3">
@@ -350,132 +312,20 @@ export default function ProfilePage() {
           </Card>
         </TabsContent>
 
-        {/* Conditions Tab */}
-        <TabsContent value="conditions" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Medical Conditions</CardTitle>
-              <CardDescription>Your diagnosed medical conditions and their status</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {conditions.map((condition, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between rounded-lg border border-border p-4"
-                  >
-                    <div>
-                      <h4 className="font-semibold">{condition.name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Diagnosed: {condition.diagnosedDate}
-                      </p>
-                    </div>
-                    <Badge
-                      variant={condition.status === "managed" ? "default" : "secondary"}
-                      className={condition.status === "managed" ? "bg-secondary" : ""}
-                    >
-                      {condition.status}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Medications Tab */}
-        <TabsContent value="medications" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Pill className="h-5 w-5 text-primary" />
-                Current Medications
-              </CardTitle>
-              <CardDescription>Your active prescriptions and refill schedule</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {medications.map((med, index) => (
-                  <div key={index} className="rounded-lg border border-border p-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="font-semibold">{med.name}</h4>
-                        <p className="text-sm text-muted-foreground">{med.dosage}</p>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        Request Refill
-                      </Button>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-4 text-sm">
-                      <span className="flex items-center gap-1 text-muted-foreground">
-                        <User className="h-3 w-3" />
-                        Prescribed by {med.prescribedBy}
-                      </span>
-                      <span className="flex items-center gap-1 text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        Since {med.startDate}
-                      </span>
-                      <span className="flex items-center gap-1 text-amber-600">
-                        <Clock className="h-3 w-3" />
-                        Refill by {med.refillDate}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Immunizations Tab */}
-        <TabsContent value="immunizations" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Syringe className="h-5 w-5 text-secondary" />
-                Immunization Records
-              </CardTitle>
-              <CardDescription>Your vaccination history and upcoming doses</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {immunizations.map((vaccine, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between rounded-lg border border-border p-4"
-                  >
-                    <div>
-                      <h4 className="font-semibold">{vaccine.name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Administered: {vaccine.date}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      {vaccine.nextDue !== "N/A" ? (
-                        <>
-                          <p className="text-sm font-medium">Next Due</p>
-                          <p className="text-sm text-muted-foreground">{vaccine.nextDue}</p>
-                        </>
-                      ) : (
-                        <Badge className="bg-secondary">Complete</Badge>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         {/* History Tab */}
         <TabsContent value="history" className="mt-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-chart-3" />
-                Medical History
-              </CardTitle>
-              <CardDescription>Your past visits, consultations, and procedures</CardDescription>
+            <CardHeader className="flex flex-row items-start justify-between space-y-0">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-chart-3" />
+                  Medical History
+                </CardTitle>
+                <CardDescription className="mt-1.5">Your past visits, consultations, and procedures</CardDescription>
+              </div>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                <Pencil className="h-4 w-4" />
+              </Button>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[500px] pr-4">
@@ -497,10 +347,18 @@ export default function ProfilePage() {
                             {record.date}
                           </div>
                         </div>
-                        <p className="mt-3 text-sm">{record.notes}</p>
-                        <Button variant="link" className="mt-2 h-auto p-0 text-primary">
-                          View Full Record
-                        </Button>
+                        <div className="mt-3 flex items-end justify-between gap-3">
+                          <p className="text-sm">{record.notes}</p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0"
+                            onClick={() => setViewingRecord(record)}
+                          >
+                            <Eye className="mr-2 h-4 w-4" />
+                            View
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -508,6 +366,32 @@ export default function ProfilePage() {
               </ScrollArea>
             </CardContent>
           </Card>
+
+          {/* View Record Dialog */}
+          <Dialog open={!!viewingRecord} onOpenChange={(open) => !open && setViewingRecord(null)}>
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  {viewingRecord?.type} — {viewingRecord?.provider}
+                </DialogTitle>
+                <DialogDescription>
+                  {viewingRecord?.hospital} · {viewingRecord?.date}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex-1 overflow-auto rounded-lg border border-border bg-muted/30 p-2">
+                {viewingRecord?.file && (
+                  <Image
+                    src={viewingRecord.file}
+                    alt={`Medical record from ${viewingRecord.date}`}
+                    width={800}
+                    height={1100}
+                    className="w-full h-auto rounded-md object-contain"
+                  />
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         {/* Notes Tab */}
@@ -635,14 +519,23 @@ export default function ProfilePage() {
                                   By {note.author}
                                 </span>
                               </div>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteNote(note.id)}
-                                className="h-8 w-8 text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground/60 hover:bg-primary/10 hover:text-primary transition-colors duration-200"
+                                >
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDeleteNote(note.id)}
+                                  className="h-8 w-8 text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         ))}
