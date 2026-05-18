@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Select,
@@ -20,6 +21,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import {
   Search,
@@ -37,6 +39,8 @@ import {
   Minus,
   Printer,
   Shield,
+  Plus,
+  Upload,
 } from "lucide-react"
 
 const testReports = [
@@ -130,19 +134,49 @@ export default function ReportsPage() {
   const [filterCategory, setFilterCategory] = useState<string>("all")
   const [selectedReport, setSelectedReport] = useState<typeof testReports[0] | null>(null)
   const [isViewOpen, setIsViewOpen] = useState(false)
+  const [isAddOpen, setIsAddOpen] = useState(false)
+  const [allReports, setAllReports] = useState(testReports)
+  const [formData, setFormData] = useState({
+    reportName: "",
+    hospitalName: "",
+    testType: "",
+    file: null as File | null,
+  })
 
-  const filteredReports = testReports.filter((report) => {
+  const filteredReports = allReports.filter((report) => {
     const matchesSearch = report.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = filterCategory === "all" || report.category === filterCategory
     return matchesSearch && matchesCategory
   })
 
-  const readyReports = testReports.filter((r) => r.status === "ready")
-  const processingReports = testReports.filter((r) => r.status === "processing")
+  const readyReports = allReports.filter((r) => r.status === "ready")
+  const processingReports = allReports.filter((r) => r.status === "processing")
 
   const handleViewReport = (report: typeof testReports[0]) => {
     setSelectedReport(report)
     setIsViewOpen(true)
+  }
+
+  const handleAddReport = () => {
+    if (!formData.reportName || !formData.hospitalName || !formData.testType || !formData.file) {
+      alert("Please fill in all fields")
+      return
+    }
+
+    const newReport = {
+      id: allReports.length + 1,
+      name: formData.reportName,
+      date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
+      lab: formData.hospitalName,
+      status: "ready" as const,
+      category: formData.testType,
+      doctor: "User Uploaded",
+      results: [],
+    }
+
+    setAllReports([newReport, ...allReports])
+    setFormData({ reportName: "", hospitalName: "", testType: "", file: null })
+    setIsAddOpen(false)
   }
 
   const getStatusIcon = (status: string) => {
@@ -168,11 +202,15 @@ export default function ReportsPage() {
             View and download your medical test reports
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="gap-1 text-secondary">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Badge variant="outline" className="gap-1 text-secondary w-fit">
             <Shield className="h-3 w-3" />
             Verified Reports
           </Badge>
+          <Button onClick={() => setIsAddOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Report
+          </Button>
         </div>
       </div>
 
@@ -428,6 +466,90 @@ export default function ReportsPage() {
               Share with Doctor
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Report Dialog */}
+      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Test Report</DialogTitle>
+            <DialogDescription>
+              Upload your medical test report by providing the required information
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="report-name">Report Name *</Label>
+              <Input
+                id="report-name"
+                placeholder="e.g., Blood Test Results"
+                value={formData.reportName}
+                onChange={(e) => setFormData({ ...formData, reportName: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="hospital-name">Hospital/Lab Name *</Label>
+              <Input
+                id="hospital-name"
+                placeholder="e.g., Square Hospital Diagnostics"
+                value={formData.hospitalName}
+                onChange={(e) => setFormData({ ...formData, hospitalName: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="test-type">Test Type *</Label>
+              <Select value={formData.testType} onValueChange={(value) => setFormData({ ...formData, testType: value })}>
+                <SelectTrigger id="test-type">
+                  <SelectValue placeholder="Select test type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Blood Test">Blood Test</SelectItem>
+                  <SelectItem value="Hormone Test">Hormone Test</SelectItem>
+                  <SelectItem value="Imaging">Imaging</SelectItem>
+                  <SelectItem value="Pathology">Pathology</SelectItem>
+                  <SelectItem value="Cardiology">Cardiology</SelectItem>
+                  <SelectItem value="Others">Others</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="file-upload">Upload File (PDF, JPG, PNG) *</Label>
+              <div className="flex items-center justify-center w-full">
+                <label
+                  htmlFor="file-upload"
+                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:bg-muted/50"
+                >
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <Upload className="h-6 w-6 text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      {formData.file ? formData.file.name : "Click to upload or drag and drop"}
+                    </p>
+                  </div>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    className="hidden"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => setFormData({ ...formData, file: e.target.files?.[0] || null })}
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsAddOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddReport}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Report
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
