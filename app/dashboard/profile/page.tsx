@@ -257,59 +257,59 @@ export default function ProfilePage() {
                 </div>
               </CardContent>
             </Card>
-          </div>
 
             {/* Allergies */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <AlertTriangle className="h-5 w-5 text-destructive" />
-                Allergies & Alerts
-              </CardTitle>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
-                <Pencil className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-3 md:grid-cols-3">
-                {allergies.map((allergy, index) => (
-                  <div
-                    key={index}
-                    className={`rounded-lg border p-4 ${
-                      allergy.severity === "severe"
-                        ? "border-red-200 bg-red-50"
-                        : allergy.severity === "moderate"
-                        ? "border-amber-200 bg-amber-50"
-                        : "border-gray-200 bg-gray-50"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold">{allergy.name}</span>
-                      <Badge
-                        variant={
-                          allergy.severity === "severe"
-                            ? "destructive"
-                            : allergy.severity === "moderate"
-                            ? "default"
-                            : "secondary"
-                        }
-                        className={
-                          allergy.severity === "moderate"
-                            ? "bg-amber-500"
-                            : allergy.severity === "mild"
-                            ? "bg-gray-500"
-                            : ""
-                        }
-                      >
-                        {allergy.severity}
-                      </Badge>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                  Allergies & Alerts
+                </CardTitle>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {allergies.map((allergy, index) => (
+                    <div
+                      key={index}
+                      className={`rounded-lg border p-4 ${
+                        allergy.severity === "severe"
+                          ? "border-red-200 bg-red-50"
+                          : allergy.severity === "moderate"
+                          ? "border-amber-200 bg-amber-50"
+                          : "border-gray-200 bg-gray-50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold">{allergy.name}</span>
+                        <Badge
+                          variant={
+                            allergy.severity === "severe"
+                              ? "destructive"
+                              : allergy.severity === "moderate"
+                              ? "default"
+                              : "secondary"
+                          }
+                          className={
+                            allergy.severity === "moderate"
+                              ? "bg-amber-500"
+                              : allergy.severity === "mild"
+                              ? "bg-gray-500"
+                              : ""
+                          }
+                        >
+                          {allergy.severity}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 text-sm text-muted-foreground">{allergy.reaction}</p>
                     </div>
-                    <p className="mt-1 text-sm text-muted-foreground">{allergy.reaction}</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* History Tab */}
