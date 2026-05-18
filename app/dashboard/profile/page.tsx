@@ -34,11 +34,13 @@ import {
   Pencil,
   Check,
   UploadCloud,
+  Camera,
 } from "lucide-react"
 
 const initialPatientData = {
   name: "John Doe",
-  age: 35,
+  avatar: "/placeholder-avatar.jpg",
+  dob: "1989-05-15",
   gender: "Male",
   bloodType: "O+",
   phone: "+880 1712-345678",
@@ -51,6 +53,17 @@ const initialPatientData = {
   },
   insuranceId: "INS-2024-78901",
   medihubId: "MH-2024-001234",
+}
+
+const calculateAge = (dob: string) => {
+  const birthDate = new Date(dob)
+  const today = new Date()
+  let age = today.getFullYear() - birthDate.getFullYear()
+  const m = today.getMonth() - birthDate.getMonth()
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--
+  }
+  return age
 }
 
 const initialAllergies = [
@@ -143,6 +156,25 @@ export default function ProfilePage() {
   const [patient, setPatient] = useState(initialPatientData)
   const [editingPersonal, setEditingPersonal] = useState(false)
   const [editPatient, setEditPatient] = useState(initialPatientData)
+  
+  // Edit Profile Main State
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false)
+  const [editProfileData, setEditProfileData] = useState(initialPatientData)
+
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const url = URL.createObjectURL(e.target.files[0])
+      setEditProfileData({ ...editProfileData, avatar: url })
+    }
+  }
+
+  const handleSaveMainProfile = (e: React.FormEvent) => {
+    e.preventDefault()
+    setPatient(editProfileData)
+    // Also sync the editPatient state if they decide to edit personal info later
+    setEditPatient(editProfileData)
+    setIsEditProfileOpen(false)
+  }
 
   const handleSavePersonal = () => {
     setPatient(editPatient)
@@ -251,7 +283,7 @@ export default function ProfilePage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="flex items-start gap-4">
           <Avatar className="h-20 w-20 border-4 border-card shadow-lg">
-            <AvatarImage src="/placeholder-avatar.jpg" alt={patient.name} />
+            <AvatarImage src={patient.avatar} alt={patient.name} className="object-cover" />
             <AvatarFallback className="bg-primary text-2xl text-primary-foreground">
               JD
             </AvatarFallback>
@@ -259,7 +291,7 @@ export default function ProfilePage() {
           <div>
             <h1 className="text-2xl font-bold text-foreground lg:text-3xl">{patient.name}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-muted-foreground">
-              <span>{patient.age} years old</span>
+              <span>{calculateAge(patient.dob)} years old</span>
               <span>·</span>
               <span>{patient.gender}</span>
               <span>·</span>
@@ -274,7 +306,7 @@ export default function ProfilePage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button size="sm">
+          <Button size="sm" onClick={() => { setEditProfileData(patient); setIsEditProfileOpen(true); }}>
             <Edit className="mr-2 h-4 w-4" />
             Edit Profile
           </Button>
@@ -835,6 +867,95 @@ export default function ProfilePage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={isEditProfileOpen} onOpenChange={setIsEditProfileOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogDescription>
+              Update your primary profile information and profile picture.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSaveMainProfile} className="space-y-6 py-4">
+            {/* Avatar Upload */}
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative group">
+                <Avatar className="h-24 w-24 border-2 border-primary shadow-sm cursor-pointer overflow-hidden">
+                  <AvatarImage src={editProfileData.avatar} alt="Profile" className="object-cover" />
+                  <AvatarFallback className="bg-primary/10">JD</AvatarFallback>
+                </Avatar>
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <Camera className="h-6 w-6 text-white" />
+                </div>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                  onChange={handleAvatarUpload}
+                  title="Upload profile picture"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Click to upload a new profile picture</p>
+            </div>
+
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Full Name</Label>
+                <Input 
+                  id="edit-name" 
+                  value={editProfileData.name} 
+                  onChange={(e) => setEditProfileData({ ...editProfileData, name: e.target.value })} 
+                  required 
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-dob">Date of Birth</Label>
+                  <Input 
+                    id="edit-dob" 
+                    type="date" 
+                    value={editProfileData.dob} 
+                    onChange={(e) => setEditProfileData({ ...editProfileData, dob: e.target.value })} 
+                    required 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Gender</Label>
+                  <Select value={editProfileData.gender} onValueChange={(val) => setEditProfileData({ ...editProfileData, gender: val })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Male">Male</SelectItem>
+                      <SelectItem value="Female">Female</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Blood Type</Label>
+                <Select value={editProfileData.bloodType} onValueChange={(val) => setEditProfileData({ ...editProfileData, bloodType: val })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Blood Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"].map((type) => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t">
+              <Button type="button" variant="ghost" onClick={() => setIsEditProfileOpen(false)}>Cancel</Button>
+              <Button type="submit">Save Changes</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
