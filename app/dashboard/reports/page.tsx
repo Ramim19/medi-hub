@@ -299,14 +299,14 @@ export default function ReportsPage() {
                         <Eye className="mr-2 h-4 w-4" />
                         View
                       </Button>
-                      <Button variant="outline" size="sm">
+                      {/* <Button variant="outline" size="sm">
                         <Download className="mr-2 h-4 w-4" />
                         Download
                       </Button>
                       <Button variant="outline" size="sm">
                         <Share2 className="mr-2 h-4 w-4" />
                         Share
-                      </Button>
+                      </Button> */}
                     </>
                   )}
                 </div>
