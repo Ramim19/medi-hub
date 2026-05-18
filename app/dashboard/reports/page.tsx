@@ -43,6 +43,8 @@ import {
   Upload,
 } from "lucide-react"
 
+const demoReportImage = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/312437349_619671059942455_965027182600412432_n-08Az34O7fyakzXi3xpGA653o67slpm.jpg"
+
 const testReports = [
   {
     id: 1,
@@ -59,7 +61,7 @@ const testReports = [
       { parameter: "Platelet Count", value: "250,000", unit: "/mcL", range: "150,000-400,000", status: "normal" },
       { parameter: "Hematocrit", value: "42", unit: "%", range: "38.8-50", status: "normal" },
     ],
-    fileUrl: null as string | null,
+    fileUrl: demoReportImage,
   },
   {
     id: 2,
@@ -76,7 +78,7 @@ const testReports = [
       { parameter: "Triglycerides", value: "145", unit: "mg/dL", range: "<150", status: "normal" },
       { parameter: "VLDL Cholesterol", value: "29", unit: "mg/dL", range: "<30", status: "normal" },
     ],
-    fileUrl: null as string | null,
+    fileUrl: demoReportImage,
   },
   {
     id: 3,
@@ -101,7 +103,7 @@ const testReports = [
       { parameter: "HbA1c", value: "6.8", unit: "%", range: "<7.0", status: "normal" },
       { parameter: "Estimated Average Glucose", value: "148", unit: "mg/dL", range: "-", status: "normal" },
     ],
-    fileUrl: null as string | null,
+    fileUrl: demoReportImage,
   },
   {
     id: 5,
@@ -131,7 +133,7 @@ const testReports = [
     results: [
       { parameter: "Findings", value: "Normal chest radiograph", unit: "-", range: "-", status: "normal" },
     ],
-    fileUrl: null as string | null,
+    fileUrl: demoReportImage,
   },
 ]
 
