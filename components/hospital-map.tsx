@@ -344,7 +344,7 @@ export function HospitalList({
               </Badge>
             </div>
           </div>
-          <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4">
+          <div className="mt-4 grid grid-cols-2 gap-2 border-t border-border pt-4">
             <div className="text-center">
               <div className="flex items-center justify-center gap-1">
                 <Users
@@ -368,13 +368,13 @@ export function HospitalList({
               </div>
               <p className="text-xs text-muted-foreground">Beds Available</p>
             </div>
-            <div className="text-center">
+            {/* <div className="text-center">
               <div className="flex items-center justify-center gap-1">
                 <Clock className="h-4 w-4 text-chart-3" />
                 <span className="text-lg font-bold">{hospital.waitTime}</span>
               </div>
               <p className="text-xs text-muted-foreground">Wait Time</p>
-            </div>
+            </div> */}
           </div>
         </Card>
       ))}

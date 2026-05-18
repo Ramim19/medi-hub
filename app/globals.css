@@ -122,4 +122,14 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Leaflet map styles - reset Tailwind base styles that break the map */
+  .leaflet-container,
+  .leaflet-container *,
+  .leaflet-marker-icon,
+  .leaflet-tile,
+  .leaflet-control,
+  .leaflet-popup {
+    @apply border-0 outline-none;
+  }
 }
