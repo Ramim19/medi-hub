@@ -149,7 +149,7 @@ export default function ProfilePage() {
     setEditAllergyList(editAllergyList.map((a, i) => i === index ? { ...a, [field]: value } : a))
   }
   const [notes, setNotes] = useState<
-    { id: number; title: string; content: string; category: string; date: string; author: string }[]
+    { id: number; title: string; content: string; category: string; date: string }[]
   >([
     {
       id: 1,
@@ -157,7 +157,6 @@ export default function ProfilePage() {
       content: "30 minutes brisk walking followed by 10 minutes stretching. Keep heart rate between 100-120 bpm.",
       category: "Lifestyle",
       date: "May 14, 2026",
-      author: "Self",
     },
     {
       id: 2,
@@ -165,9 +164,35 @@ export default function ProfilePage() {
       content: "Reduce sodium intake to under 2300mg/day. Increase fiber-rich vegetables. Avoid processed foods.",
       category: "Dietary",
       date: "May 10, 2026",
-      author: "Dr. Sarah Ahmed",
     },
   ])
+
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null)
+  const [editNoteData, setEditNoteData] = useState({ title: "", content: "", category: "" })
+
+  const handleEditNote = (note: typeof notes[0]) => {
+    setEditingNoteId(note.id)
+    setEditNoteData({ title: note.title, content: note.content, category: note.category })
+  }
+
+  const handleSaveNote = (id: number) => {
+    setNotes(notes.map((note) => 
+      note.id === id 
+        ? { 
+            ...note, 
+            title: editNoteData.title, 
+            content: editNoteData.content, 
+            category: editNoteData.category,
+            date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+          } 
+        : note
+    ))
+    setEditingNoteId(null)
+  }
+
+  const handleCancelEditNote = () => {
+    setEditingNoteId(null)
+  }
 
   const [newNoteTitle, setNewNoteTitle] = useState("")
   const [newNoteContent, setNewNoteContent] = useState("")
@@ -182,7 +207,6 @@ export default function ProfilePage() {
       content: newNoteContent,
       category: newNoteCategory,
       date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-      author: "Self",
     }
     setNotes([newNote, ...notes])
     setNewNoteTitle("")
@@ -608,59 +632,101 @@ export default function ProfilePage() {
                   ) : (
                     <ScrollArea className="h-[520px] pr-4">
                       <div className="space-y-4">
-                        {notes.map((note) => (
+                        {[...notes].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((note) => (
                           <div
                             key={note.id}
                             className="group relative flex flex-col justify-between rounded-xl border border-border/80 bg-card p-5 shadow-sm transition-all duration-300 hover:border-border hover:shadow-md"
                           >
-                            <div>
-                              <div className="flex items-start justify-between gap-4">
-                                <h4 className="font-semibold text-foreground text-base group-hover:text-primary transition-colors">
-                                  {note.title}
-                                </h4>
-                                <Badge
-                                  variant="outline"
-                                  className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${getCategoryBadgeClass(
-                                    note.category
-                                  )}`}
-                                >
-                                  {note.category}
-                                </Badge>
+                            {editingNoteId === note.id ? (
+                              <div className="space-y-4 w-full">
+                                <div className="space-y-2">
+                                  <Input
+                                    value={editNoteData.title}
+                                    onChange={(e) => setEditNoteData({ ...editNoteData, title: e.target.value })}
+                                    className="font-semibold text-base"
+                                    placeholder="Note Title"
+                                  />
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                  {["General", "Dietary", "Lifestyle", "Prescription"].map((cat) => (
+                                    <button
+                                      key={cat}
+                                      type="button"
+                                      onClick={() => setEditNoteData({ ...editNoteData, category: cat })}
+                                      className={`flex items-center justify-center rounded-lg border py-1.5 text-xs font-medium transition-all duration-200 ${
+                                        editNoteData.category === cat
+                                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                          : "bg-card text-muted-foreground border-border hover:bg-muted/50"
+                                      }`}
+                                    >
+                                      {cat}
+                                    </button>
+                                  ))}
+                                </div>
+                                <Textarea
+                                  value={editNoteData.content}
+                                  onChange={(e) => setEditNoteData({ ...editNoteData, content: e.target.value })}
+                                  className="min-h-[100px] resize-none text-sm"
+                                  placeholder="Note Content"
+                                />
+                                <div className="flex justify-end gap-2 pt-2 border-t border-border/40">
+                                  <Button variant="ghost" size="sm" onClick={handleCancelEditNote}>
+                                    Cancel
+                                  </Button>
+                                  <Button size="sm" onClick={() => handleSaveNote(note.id)}>
+                                    Save Changes
+                                  </Button>
+                                </div>
                               </div>
-                              <p className="mt-3 text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                                {note.content}
-                              </p>
-                            </div>
-                            
-                            <div className="mt-5 flex items-center justify-between border-t border-border/40 pt-4 text-xs text-muted-foreground">
-                              <div className="flex flex-wrap items-center gap-4">
-                                <span className="flex items-center gap-1.5">
-                                  <Calendar className="h-3.5 w-3.5" />
-                                  {note.date}
-                                </span>
-                                <span className="flex items-center gap-1.5 font-medium text-foreground/75">
-                                  <User className="h-3.5 w-3.5" />
-                                  By {note.author}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground/60 hover:bg-primary/10 hover:text-primary transition-colors duration-200"
-                                >
-                                  <Pencil className="h-3.5 w-3.5" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleDeleteNote(note.id)}
-                                  className="h-8 w-8 text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
+                            ) : (
+                              <>
+                                <div>
+                                  <div className="flex items-start justify-between gap-4">
+                                    <h4 className="font-semibold text-foreground text-base group-hover:text-primary transition-colors">
+                                      {note.title}
+                                    </h4>
+                                    <Badge
+                                      variant="outline"
+                                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${getCategoryBadgeClass(
+                                        note.category
+                                      )}`}
+                                    >
+                                      {note.category}
+                                    </Badge>
+                                  </div>
+                                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                                    {note.content}
+                                  </p>
+                                </div>
+                                
+                                <div className="mt-5 flex items-center justify-between border-t border-border/40 pt-4 text-xs text-muted-foreground">
+                                  <div className="flex flex-wrap items-center gap-4">
+                                    <span className="flex items-center gap-1.5">
+                                      <Calendar className="h-3.5 w-3.5" />
+                                      {note.date}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleEditNote(note)}
+                                      className="h-8 w-8 text-muted-foreground/60 hover:bg-primary/10 hover:text-primary transition-colors duration-200"
+                                    >
+                                      <Pencil className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleDeleteNote(note.id)}
+                                      className="h-8 w-8 text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </>
+                            )}
                           </div>
                         ))}
                       </div>
