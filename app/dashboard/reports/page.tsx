@@ -59,6 +59,7 @@ const testReports = [
       { parameter: "Platelet Count", value: "250,000", unit: "/mcL", range: "150,000-400,000", status: "normal" },
       { parameter: "Hematocrit", value: "42", unit: "%", range: "38.8-50", status: "normal" },
     ],
+    fileUrl: null as string | null,
   },
   {
     id: 2,
@@ -75,6 +76,7 @@ const testReports = [
       { parameter: "Triglycerides", value: "145", unit: "mg/dL", range: "<150", status: "normal" },
       { parameter: "VLDL Cholesterol", value: "29", unit: "mg/dL", range: "<30", status: "normal" },
     ],
+    fileUrl: null as string | null,
   },
   {
     id: 3,
@@ -85,6 +87,7 @@ const testReports = [
     category: "Hormone Test",
     doctor: "Dr. Fatima Begum",
     results: [],
+    fileUrl: null as string | null,
   },
   {
     id: 4,
@@ -98,6 +101,7 @@ const testReports = [
       { parameter: "HbA1c", value: "6.8", unit: "%", range: "<7.0", status: "normal" },
       { parameter: "Estimated Average Glucose", value: "148", unit: "mg/dL", range: "-", status: "normal" },
     ],
+    fileUrl: null as string | null,
   },
   {
     id: 5,
@@ -114,6 +118,7 @@ const testReports = [
       { parameter: "Total Bilirubin", value: "0.8", unit: "mg/dL", range: "0.1-1.2", status: "normal" },
       { parameter: "Albumin", value: "4.2", unit: "g/dL", range: "3.5-5.0", status: "normal" },
     ],
+    fileUrl: null as string | null,
   },
   {
     id: 6,
@@ -126,6 +131,7 @@ const testReports = [
     results: [
       { parameter: "Findings", value: "Normal chest radiograph", unit: "-", range: "-", status: "normal" },
     ],
+    fileUrl: null as string | null,
   },
 ]
 
@@ -163,20 +169,26 @@ export default function ReportsPage() {
       return
     }
 
-    const newReport = {
-      id: allReports.length + 1,
-      name: formData.reportName,
-      date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
-      lab: formData.hospitalName,
-      status: "ready" as const,
-      category: formData.testType,
-      doctor: "User Uploaded",
-      results: [],
-    }
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const fileUrl = e.target?.result as string
+      const newReport = {
+        id: allReports.length + 1,
+        name: formData.reportName,
+        date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
+        lab: formData.hospitalName,
+        status: "ready" as const,
+        category: formData.testType,
+        doctor: "User Uploaded",
+        results: [],
+        fileUrl: fileUrl,
+      }
 
-    setAllReports([newReport, ...allReports])
-    setFormData({ reportName: "", hospitalName: "", testType: "", file: null })
-    setIsAddOpen(false)
+      setAllReports([newReport, ...allReports])
+      setFormData({ reportName: "", hospitalName: "", testType: "", file: null })
+      setIsAddOpen(false)
+    }
+    reader.readAsDataURL(formData.file)
   }
 
   const getStatusIcon = (status: string) => {
@@ -365,91 +377,114 @@ export default function ReportsPage() {
           </DialogHeader>
           <ScrollArea className="flex-1 pr-4">
             <div className="space-y-6 py-4">
-              {/* Report Header */}
-              <Card className="bg-muted/30">
-                <CardContent className="grid gap-4 p-4 md:grid-cols-2">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Ordered By</p>
-                    <p className="font-medium">{selectedReport?.doctor}</p>
+              {/* File Viewer */}
+              {selectedReport?.fileUrl ? (
+                <div className="space-y-4">
+                  <div className="rounded-lg border border-muted bg-muted/30 p-4">
+                    {selectedReport.fileUrl.startsWith("data:application/pdf") ? (
+                      <iframe
+                        src={selectedReport.fileUrl}
+                        className="w-full h-[600px] rounded border"
+                        title="PDF Report"
+                      />
+                    ) : (
+                      <img
+                        src={selectedReport.fileUrl}
+                        alt="Report"
+                        className="w-full h-auto rounded border max-h-[600px] object-contain"
+                      />
+                    )}
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Laboratory</p>
-                    <p className="font-medium">{selectedReport?.lab}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Report Date</p>
-                    <p className="font-medium">{selectedReport?.date}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Category</p>
-                    <p className="font-medium">{selectedReport?.category}</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Results Table */}
-              <div>
-                <h3 className="mb-4 font-semibold">Test Results</h3>
-                <div className="rounded-lg border">
-                  <div className="grid grid-cols-5 gap-4 border-b bg-muted/50 p-3 text-sm font-medium">
-                    <span>Parameter</span>
-                    <span>Value</span>
-                    <span>Unit</span>
-                    <span>Reference Range</span>
-                    <span>Status</span>
-                  </div>
-                  {selectedReport?.results.map((result, index) => (
-                    <div
-                      key={index}
-                      className={`grid grid-cols-5 gap-4 p-3 text-sm ${
-                        index !== selectedReport.results.length - 1 ? "border-b" : ""
-                      } ${result.status !== "normal" ? "bg-red-50/50" : ""}`}
-                    >
-                      <span className="font-medium">{result.parameter}</span>
-                      <span
-                        className={`font-semibold ${
-                          result.status === "high"
-                            ? "text-red-600"
-                            : result.status === "low"
-                            ? "text-amber-600"
-                            : ""
-                        }`}
-                      >
-                        {result.value}
-                      </span>
-                      <span className="text-muted-foreground">{result.unit}</span>
-                      <span className="text-muted-foreground">{result.range}</span>
-                      <span className="flex items-center gap-1">
-                        {getStatusIcon(result.status)}
-                        <span
-                          className={`capitalize ${
-                            result.status === "high"
-                              ? "text-red-600"
-                              : result.status === "low"
-                              ? "text-amber-600"
-                              : "text-green-600"
-                          }`}
-                        >
-                          {result.status}
-                        </span>
-                      </span>
-                    </div>
-                  ))}
                 </div>
-              </div>
+              ) : (
+                <>
+                  {/* Report Header */}
+                  <Card className="bg-muted/30">
+                    <CardContent className="grid gap-4 p-4 md:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Ordered By</p>
+                        <p className="font-medium">{selectedReport?.doctor}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Laboratory</p>
+                        <p className="font-medium">{selectedReport?.lab}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Report Date</p>
+                        <p className="font-medium">{selectedReport?.date}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Category</p>
+                        <p className="font-medium">{selectedReport?.category}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              {/* Verification Badge */}
-              <Card className="border-secondary/30 bg-secondary/5">
-                <CardContent className="flex items-center gap-3 p-4">
-                  <Shield className="h-6 w-6 text-secondary" />
+                  {/* Results Table */}
                   <div>
-                    <p className="font-semibold text-secondary">Digitally Verified Report</p>
-                    <p className="text-sm text-muted-foreground">
-                      This report has been verified by {selectedReport?.lab} and is authentic.
-                    </p>
+                    <h3 className="mb-4 font-semibold">Test Results</h3>
+                    <div className="rounded-lg border">
+                      <div className="grid grid-cols-5 gap-4 border-b bg-muted/50 p-3 text-sm font-medium">
+                        <span>Parameter</span>
+                        <span>Value</span>
+                        <span>Unit</span>
+                        <span>Reference Range</span>
+                        <span>Status</span>
+                      </div>
+                      {selectedReport?.results.map((result, index) => (
+                        <div
+                          key={index}
+                          className={`grid grid-cols-5 gap-4 p-3 text-sm ${
+                            index !== selectedReport.results.length - 1 ? "border-b" : ""
+                          } ${result.status !== "normal" ? "bg-red-50/50" : ""}`}
+                        >
+                          <span className="font-medium">{result.parameter}</span>
+                          <span
+                            className={`font-semibold ${
+                              result.status === "high"
+                                ? "text-red-600"
+                                : result.status === "low"
+                                ? "text-amber-600"
+                                : ""
+                            }`}
+                          >
+                            {result.value}
+                          </span>
+                          <span className="text-muted-foreground">{result.unit}</span>
+                          <span className="text-muted-foreground">{result.range}</span>
+                          <span className="flex items-center gap-1">
+                            {getStatusIcon(result.status)}
+                            <span
+                              className={`capitalize ${
+                                result.status === "high"
+                                  ? "text-red-600"
+                                  : result.status === "low"
+                                  ? "text-amber-600"
+                                  : "text-green-600"
+                              }`}
+                            >
+                              {result.status}
+                            </span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
+
+                  {/* Verification Badge */}
+                  <Card className="border-secondary/30 bg-secondary/5">
+                    <CardContent className="flex items-center gap-3 p-4">
+                      <Shield className="h-6 w-6 text-secondary" />
+                      <div>
+                        <p className="font-semibold text-secondary">Digitally Verified Report</p>
+                        <p className="text-sm text-muted-foreground">
+                          This report has been verified by {selectedReport?.lab} and is authentic.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </div>
           </ScrollArea>
           <div className="flex justify-end gap-2 pt-4 border-t">
