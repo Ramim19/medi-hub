@@ -395,7 +395,7 @@ export default function ReportsPage() {
               {selectedReport?.date} | {selectedReport?.lab}
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="flex-1 pr-4">
+          <ScrollArea className="flex-1 pr-4 h-[calc(90vh-180px)]">
             <div className="space-y-6 py-4">
               {/* File Viewer - Show image if fileUrl exists */}
               {selectedReport && selectedReport.fileUrl && selectedReport.fileUrl.length > 0 ? (
@@ -411,7 +411,7 @@ export default function ReportsPage() {
                       <img
                         src={selectedReport.fileUrl}
                         alt="Report"
-                        className="w-full h-auto rounded border max-h-[600px] object-contain"
+                        className="w-full h-auto rounded border object-contain"
                       />
                     )}
                   </div>
