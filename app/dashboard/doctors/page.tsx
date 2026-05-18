@@ -510,9 +510,10 @@ export default function DoctorsPage() {
 
             <CardFooter className="bg-muted/30 pt-4">
               <Button 
-                className="w-full gap-2" 
-                onClick={() => handleBookAppointment(doctor)}
+                className={`w-full gap-2 ${!doctor.isAvailable ? "bg-gray-400 text-white hover:bg-gray-400 cursor-not-allowed" : ""}`}
+                onClick={() => doctor.isAvailable && handleBookAppointment(doctor)}
                 variant={doctor.isAvailable ? "default" : "secondary"}
+                disabled={!doctor.isAvailable}
               >
                 <Calendar className="h-4 w-4" />
                 Book Appointment
