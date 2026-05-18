@@ -274,10 +274,6 @@ export default function ProfilePage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Download className="mr-2 h-4 w-4" />
-            Export Records
-          </Button>
           <Button size="sm">
             <Edit className="mr-2 h-4 w-4" />
             Edit Profile
