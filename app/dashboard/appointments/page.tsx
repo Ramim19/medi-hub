@@ -109,10 +109,6 @@ export default function AppointmentsPage() {
             Manage your doctor appointments and consultations
           </p>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Book New Appointment
-        </Button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
