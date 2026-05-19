@@ -54,7 +54,7 @@ const initialUpcomingAppointments = [
   },
 ]
 
-const pastAppointments = [
+const initialPastAppointments = [
   {
     id: 4,
     doctor: "Dr. Sarah Ahmed",
@@ -90,10 +90,27 @@ const pastAppointments = [
 export default function AppointmentsPage() {
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [upcomingAppointments, setUpcomingAppointments] = useState(initialUpcomingAppointments)
+  const [pastApts, setPastApts] = useState(initialPastAppointments)
   const [appointmentToCancel, setAppointmentToCancel] = useState<number | null>(null)
 
   const handleCancel = (id: number) => {
-    setUpcomingAppointments(upcomingAppointments.filter((apt) => apt.id !== id))
+    const aptToCancel = upcomingAppointments.find((apt) => apt.id === id)
+    if (aptToCancel) {
+      setUpcomingAppointments(upcomingAppointments.filter((apt) => apt.id !== id))
+      setPastApts([
+        {
+          id: aptToCancel.id,
+          doctor: aptToCancel.doctor,
+          specialty: aptToCancel.specialty,
+          hospital: aptToCancel.hospital,
+          date: aptToCancel.date,
+          type: "in-person",
+          status: "cancelled",
+          notes: "Patient cancelled the appointment.",
+        },
+        ...pastApts,
+      ])
+    }
   }
 
   return (
@@ -218,7 +235,7 @@ export default function AppointmentsPage() {
             </TabsContent>
 
             <TabsContent value="past" className="mt-6 space-y-4">
-              {pastAppointments.map((apt) => (
+              {pastApts.map((apt) => (
                 <Card key={apt.id} className={apt.status === "cancelled" ? "opacity-60" : ""}>
                   <CardContent className="p-6">
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
