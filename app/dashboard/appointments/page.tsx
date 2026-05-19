@@ -9,19 +9,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Calendar } from "@/components/ui/calendar"
 import {
   Calendar as CalendarIcon,
-  Clock,
   MapPin,
   Phone,
-  Video,
-  CheckCircle,
+  Mail,
   XCircle,
-  AlertCircle,
-  Plus,
-  Filter,
-  Stethoscope,
 } from "lucide-react"
 
-const upcomingAppointments = [
+const initialUpcomingAppointments = [
   {
     id: 1,
     doctor: "Dr. Sarah Ahmed",
@@ -29,9 +23,9 @@ const upcomingAppointments = [
     hospital: "Square Hospital",
     address: "18/F, West Panthapath",
     date: "May 5, 2026",
-    time: "10:30 AM",
-    type: "in-person",
-    status: "confirmed",
+    serialNumber: 16,
+    phone: "+8801545682137",
+    email: "dr.sarah@gmail.com",
     avatar: "/placeholder-doctor.jpg",
   },
   {
@@ -41,9 +35,9 @@ const upcomingAppointments = [
     hospital: "United Hospital",
     address: "Plot 15, Road 71, Gulshan-2",
     date: "May 8, 2026",
-    time: "2:00 PM",
-    type: "video",
-    status: "pending",
+    serialNumber: 24,
+    phone: "+8801712345678",
+    email: "dr.rahim@gmail.com",
     avatar: "/placeholder-doctor.jpg",
   },
   {
@@ -53,9 +47,9 @@ const upcomingAppointments = [
     hospital: "Labaid Hospital",
     address: "House 1, Road 4, Dhanmondi",
     date: "May 12, 2026",
-    time: "11:00 AM",
-    type: "in-person",
-    status: "confirmed",
+    serialNumber: 5,
+    phone: "+8801819283746",
+    email: "dr.fatima@gmail.com",
     avatar: "/placeholder-doctor.jpg",
   },
 ]
@@ -67,7 +61,6 @@ const pastAppointments = [
     specialty: "Cardiologist",
     hospital: "Square Hospital",
     date: "Apr 15, 2026",
-    time: "10:00 AM",
     type: "in-person",
     status: "completed",
     notes: "Routine checkup. Blood pressure normal. Continue current medication.",
@@ -78,7 +71,6 @@ const pastAppointments = [
     specialty: "Gastroenterologist",
     hospital: "United Hospital",
     date: "Mar 28, 2026",
-    time: "3:30 PM",
     type: "video",
     status: "completed",
     notes: "Follow-up for gastritis. Symptoms improved. Dietary changes recommended.",
@@ -89,7 +81,6 @@ const pastAppointments = [
     specialty: "Dermatologist",
     hospital: "Apollo Hospital",
     date: "Feb 10, 2026",
-    time: "9:00 AM",
     type: "in-person",
     status: "cancelled",
     notes: "Patient cancelled due to scheduling conflict.",
@@ -98,6 +89,12 @@ const pastAppointments = [
 
 export default function AppointmentsPage() {
   const [date, setDate] = useState<Date | undefined>(new Date())
+  const [upcomingAppointments, setUpcomingAppointments] = useState(initialUpcomingAppointments)
+  const [appointmentToCancel, setAppointmentToCancel] = useState<number | null>(null)
+
+  const handleCancel = (id: number) => {
+    setUpcomingAppointments(upcomingAppointments.filter((apt) => apt.id !== id))
+  }
 
   return (
     <div className="space-y-6">
@@ -126,90 +123,98 @@ export default function AppointmentsPage() {
             </TabsList>
 
             <TabsContent value="upcoming" className="mt-6 space-y-4">
-              {upcomingAppointments.map((apt) => (
-                <Card key={apt.id}>
-                  <CardContent className="p-6">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                      <div className="flex gap-4">
-                        <Avatar className="h-14 w-14">
-                          <AvatarImage src={apt.avatar} alt={apt.doctor} />
-                          <AvatarFallback className="bg-primary text-primary-foreground">
-                            {apt.doctor
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-semibold">{apt.doctor}</h3>
-                          <p className="text-sm text-muted-foreground">{apt.specialty}</p>
-                          <div className="mt-2 flex flex-wrap items-center gap-3">
-                            <Badge
-                              variant={apt.type === "video" ? "secondary" : "outline"}
-                              className={apt.type === "video" ? "bg-secondary/20 text-secondary" : ""}
-                            >
-                              {apt.type === "video" ? (
-                                <Video className="mr-1 h-3 w-3" />
-                              ) : (
-                                <Stethoscope className="mr-1 h-3 w-3" />
-                              )}
-                              {apt.type === "video" ? "Video Call" : "In-Person"}
-                            </Badge>
-                            <Badge
-                              variant={apt.status === "confirmed" ? "default" : "secondary"}
-                              className={
-                                apt.status === "confirmed"
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-amber-100 text-amber-700"
-                              }
-                            >
-                              {apt.status === "confirmed" ? (
-                                <CheckCircle className="mr-1 h-3 w-3" />
-                              ) : (
-                                <AlertCircle className="mr-1 h-3 w-3" />
-                              )}
-                              {apt.status}
-                            </Badge>
+              {upcomingAppointments.length === 0 ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center p-6 text-center">
+                    <p className="text-muted-foreground">No upcoming appointments.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                upcomingAppointments.map((apt) => (
+                  <Card key={apt.id}>
+                    <CardContent className="p-6">
+                      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                        <div className="flex gap-4">
+                          <Avatar className="h-14 w-14">
+                            <AvatarImage src={apt.avatar} alt={apt.doctor} />
+                            <AvatarFallback className="bg-primary text-primary-foreground">
+                              {apt.doctor
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <h3 className="font-semibold">{apt.doctor}</h3>
+                            <p className="text-sm text-muted-foreground">{apt.specialty}</p>
+                          </div>
+                        </div>
+                        <div className="space-y-2 text-right">
+                          <div className="flex items-center justify-end gap-2 text-sm">
+                            <span className="rounded-full bg-primary/10 px-3 py-1 font-medium text-primary">
+                              Serial No: {apt.serialNumber}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-end gap-2 text-sm">
+                            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">{apt.date}</span>
                           </div>
                         </div>
                       </div>
-                      <div className="space-y-2 text-right">
-                        <div className="flex items-center justify-end gap-2 text-sm">
-                          <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{apt.date}</span>
+                      <div className="mt-4 flex flex-col gap-3 rounded-lg bg-muted/50 p-4">
+                        <div className="flex items-start gap-2">
+                          <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                          <div>
+                            <p className="text-sm font-medium">{apt.hospital}</p>
+                            <p className="text-sm text-muted-foreground">{apt.address}</p>
+                          </div>
                         </div>
-                        <div className="flex items-center justify-end gap-2 text-sm">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span>{apt.time}</span>
+                        <div className="flex flex-col gap-2 border-t border-border pt-3 sm:flex-row sm:items-center sm:gap-6">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Phone className="h-4 w-4" />
+                            <span>{apt.phone}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Mail className="h-4 w-4" />
+                            <span>{apt.email}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="mt-4 flex items-start gap-2 rounded-lg bg-muted/50 p-3">
-                      <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium">{apt.hospital}</p>
-                        <p className="text-sm text-muted-foreground">{apt.address}</p>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {appointmentToCancel === apt.id ? (
+                          <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-md border">
+                            <span className="text-sm font-medium text-muted-foreground mr-2">Are you sure?</span>
+                            <Button 
+                              variant="destructive" 
+                              size="sm" 
+                              className="h-8 px-3"
+                              onClick={() => {
+                                handleCancel(apt.id)
+                                setAppointmentToCancel(null)
+                              }}
+                            >
+                              Yes
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 px-3"
+                              onClick={() => setAppointmentToCancel(null)}
+                            >
+                              No
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button variant="outline" className="text-destructive" onClick={() => setAppointmentToCancel(apt.id)}>
+                            <XCircle className="mr-2 h-4 w-4" />
+                            Cancel
+                          </Button>
+                        )}
                       </div>
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {apt.type === "video" && apt.status === "confirmed" && (
-                        <Button className="bg-secondary hover:bg-secondary/90">
-                          <Video className="mr-2 h-4 w-4" />
-                          Join Video Call
-                        </Button>
-                      )}
-                      <Button variant="outline">
-                        <Phone className="mr-2 h-4 w-4" />
-                        Contact
-                      </Button>
-                      <Button variant="outline" className="text-destructive">
-                        <XCircle className="mr-2 h-4 w-4" />
-                        Cancel
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </TabsContent>
 
             <TabsContent value="past" className="mt-6 space-y-4">
@@ -235,7 +240,6 @@ export default function AppointmentsPage() {
                       </div>
                       <div className="text-right text-sm text-muted-foreground">
                         <p>{apt.date}</p>
-                        <p>{apt.time}</p>
                       </div>
                     </div>
                     {apt.notes && (
