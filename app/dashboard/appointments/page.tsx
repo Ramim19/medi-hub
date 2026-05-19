@@ -246,13 +246,6 @@ export default function AppointmentsPage() {
                         </p>
                       </div>
                     )}
-                    {apt.status === "completed" && (
-                      <div className="mt-4">
-                        <Button variant="outline" size="sm">
-                          Book Follow-up
-                        </Button>
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               ))}
