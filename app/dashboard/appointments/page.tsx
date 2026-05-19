@@ -60,30 +60,39 @@ const initialPastAppointments = [
     doctor: "Dr. Sarah Ahmed",
     specialty: "Cardiologist",
     hospital: "Square Hospital",
+    address: "18/F, West Panthapath",
     date: "Apr 15, 2026",
-    type: "in-person",
+    serialNumber: 12,
+    phone: "+8801545682137",
+    email: "dr.sarah@gmail.com",
+    avatar: "/placeholder-doctor.jpg",
     status: "completed",
-    notes: "Routine checkup. Blood pressure normal. Continue current medication.",
   },
   {
     id: 5,
     doctor: "Dr. Karim Uddin",
     specialty: "Gastroenterologist",
     hospital: "United Hospital",
+    address: "Plot 15, Road 71, Gulshan-2",
     date: "Mar 28, 2026",
-    type: "video",
+    serialNumber: 8,
+    phone: "+8801987654321",
+    email: "dr.karim@gmail.com",
+    avatar: "/placeholder-doctor.jpg",
     status: "completed",
-    notes: "Follow-up for gastritis. Symptoms improved. Dietary changes recommended.",
   },
   {
     id: 6,
     doctor: "Dr. Nusrat Jahan",
     specialty: "Dermatologist",
     hospital: "Apollo Hospital",
+    address: "Block E, Bashundhara R/A",
     date: "Feb 10, 2026",
-    type: "in-person",
+    serialNumber: 2,
+    phone: "+8801654321987",
+    email: "dr.nusrat@gmail.com",
+    avatar: "/placeholder-doctor.jpg",
     status: "cancelled",
-    notes: "Patient cancelled due to scheduling conflict.",
   },
 ]
 
@@ -103,10 +112,13 @@ export default function AppointmentsPage() {
           doctor: aptToCancel.doctor,
           specialty: aptToCancel.specialty,
           hospital: aptToCancel.hospital,
+          address: aptToCancel.address,
           date: aptToCancel.date,
-          type: "in-person",
+          serialNumber: aptToCancel.serialNumber,
+          phone: aptToCancel.phone,
+          email: aptToCancel.email,
+          avatar: aptToCancel.avatar,
           status: "cancelled",
-          notes: "Patient cancelled the appointment.",
         },
         ...pastApts,
       ])
@@ -239,34 +251,63 @@ export default function AppointmentsPage() {
                 <Card key={apt.id} className={apt.status === "cancelled" ? "opacity-60" : ""}>
                   <CardContent className="p-6">
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{apt.doctor}</h3>
-                          <Badge
-                            variant={apt.status === "completed" ? "default" : "destructive"}
-                            className={apt.status === "completed" ? "bg-secondary" : ""}
-                          >
-                            {apt.status}
-                          </Badge>
+                      <div className="flex gap-4">
+                        <Avatar className="h-14 w-14">
+                          <AvatarImage src={apt.avatar} alt={apt.doctor} />
+                          <AvatarFallback className="bg-primary text-primary-foreground">
+                            {apt.doctor
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold">{apt.doctor}</h3>
+                            <Badge
+                              variant={apt.status === "completed" ? "default" : "destructive"}
+                              className={apt.status === "completed" ? "bg-secondary" : ""}
+                            >
+                              {apt.status}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{apt.specialty}</p>
                         </div>
-                        <p className="text-sm text-muted-foreground">{apt.specialty}</p>
-                        <p className="mt-1 text-sm">
-                          <MapPin className="mr-1 inline h-3 w-3" />
-                          {apt.hospital}
-                        </p>
                       </div>
-                      <div className="text-right text-sm text-muted-foreground">
-                        <p>{apt.date}</p>
+                      <div className="space-y-2 text-right">
+                        {apt.serialNumber && (
+                          <div className="flex items-center justify-end gap-2 text-sm">
+                            <span className="rounded-full bg-primary/10 px-3 py-1 font-medium text-primary">
+                              Serial No: {apt.serialNumber}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-end gap-2 text-sm">
+                          <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">{apt.date}</span>
+                        </div>
                       </div>
                     </div>
-                    {apt.notes && (
-                      <div className="mt-4 rounded-lg bg-muted/50 p-3">
-                        <p className="text-sm">
-                          <span className="font-medium">Notes: </span>
-                          {apt.notes}
-                        </p>
+                    
+                    <div className="mt-4 flex flex-col gap-3 rounded-lg bg-muted/50 p-4">
+                      <div className="flex items-start gap-2">
+                        <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm font-medium">{apt.hospital}</p>
+                          <p className="text-sm text-muted-foreground">{apt.address}</p>
+                        </div>
                       </div>
-                    )}
+                      <div className="flex flex-col gap-2 border-t border-border pt-3 sm:flex-row sm:items-center sm:gap-6">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Phone className="h-4 w-4" />
+                          <span>{apt.phone}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Mail className="h-4 w-4" />
+                          <span>{apt.email}</span>
+                        </div>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
